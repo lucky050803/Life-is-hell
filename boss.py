@@ -1,0 +1,85 @@
+import pygame
+import random
+import math
+from bullet import Bullet, ReboundingBullet, TriangleBullet
+
+class Cerberus:
+    def __init__(self, x, y):
+        self.image = pygame.Surface((60, 60), pygame.SRCALPHA)  # Réduire la taille de Cerberus
+        pygame.draw.polygon(self.image, (255, 0, 0), [(30, 0), (0, 60), (60, 60)])  # Dessiner un triangle pour Cerberus
+        self.rect = self.image.get_rect(center=(x, y))
+        self.health = 500  # Augmentation des PV
+        self.move_timer = 0
+        self.move_interval = 60  # Réduire l'intervalle de mouvement
+        self.target_pos = self.get_new_position()
+        self.attack_timer = 0
+        self.attack_interval = 90  # Réduire l'intervalle d'attaque
+        self.attack_types = [self.explode, self.shoot_rebounding_bullets, self.shoot_triangle_bullets]
+        self.phase_two = False
+
+    def get_new_position(self):
+        return (random.randint(100, 700), random.randint(100, 500))
+    
+    def explode(self):
+        bullets = []
+        for angle in range(0, 360, 30):  # Crée des projectiles dans toutes les directions
+            bullets.append(Bullet(self.rect.center, (
+                self.rect.centerx + 100 * math.cos(math.radians(angle)), 
+                self.rect.centery + 100 * math.sin(math.radians(angle))
+            ), color=(0, 0, 255)))  # Les projectiles sont bleus
+        return bullets
+    
+    def shoot_rebounding_bullets(self):
+        bullets = []
+        for _ in range(8):  # 8 balles qui rebondissent
+            target_pos = self.get_new_position()
+            bullets.append(ReboundingBullet(self.rect.center, target_pos, color=(0, 0, 255)))  # Les projectiles sont bleus
+        return bullets
+
+    def shoot_triangle_bullets(self):
+        bullets = []
+        for angle in range(0, 360, 45):  # Crée des triangles dans toutes les directions
+            bullets.append(TriangleBullet(self.rect.center, (
+                self.rect.centerx + 200 * math.cos(math.radians(angle)), 
+                self.rect.centery + 200 * math.sin(math.radians(angle))
+            ), color=(0, 0, 255)))  # Les triangles sont bleus
+        return bullets
+
+    def phase_two_attack(self):
+        bullets = []
+        for angle in range(0, 360, 15):  # Crée des projectiles dans toutes les directions plus fréquents
+            bullets.append(Bullet(self.rect.center, (
+                self.rect.centerx + 150 * math.cos(math.radians(angle)), 
+                self.rect.centery + 150 * math.sin(math.radians(angle))
+            ), color=(0, 0, 255)))  # Les projectiles sont bleus
+        return bullets
+
+    def update(self):
+        self.move_timer += 1
+        self.attack_timer += 1
+
+        if self.health <= 250 and not self.phase_two:  # Vérifie si Cerberus est à la moitié de sa vie
+            self.phase_two = True
+            self.attack_interval = 60  # Réduit encore plus l'intervalle d'attaque
+
+        if self.move_timer >= self.move_interval:
+            self.move_timer = 0
+            self.target_pos = self.get_new_position()
+            return self.explode()
+        
+        if self.rect.center != self.target_pos:
+            self.rect = self.rect.move(
+                (self.target_pos[0] - self.rect.centerx) // self.move_interval, 
+                (self.target_pos[1] - self.rect.centery) // self.move_interval
+            )
+
+        if self.attack_timer >= self.attack_interval:
+            self.attack_timer = 0
+            if self.phase_two:
+                return self.phase_two_attack()
+            return random.choice(self.attack_types)()
+        
+        return []
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect.topleft)
