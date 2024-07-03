@@ -16,9 +16,15 @@ FPS = 60
 
 # Couleurs
 WHITE = (255, 255, 255)
-RED = (255, 0, 0)
+RED = (158, 19, 19)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
+
+BG_WHITE = (214, 215, 215)
+BG_RED = (238, 191, 183)
+BG_GREEN = (212, 238, 183)
+BG_BLUE = (183, 212, 238)
+#gris = (214, 215, 215)
 
 # Création de la fenêtre de jeu
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -31,13 +37,13 @@ def draw_text(screen, text, font, color, x, y):
 def change_background_color(current_color, timer):
     if timer % 120 < 10:  # Flashe entre bleu, rouge et vert
         if timer % 30 < 10:
-            return BLUE
+            return BG_BLUE
         elif timer % 30 < 20:
-            return RED
+            return BG_RED
         else:
-            return GREEN
+            return BG_GREEN
     elif timer % 240 < 120:
-        return (50, 50, 50)  # Gris
+        return (214, 215, 215)  # Gris
     else:
         return (0, 0, 0)  # Noir
 
@@ -119,9 +125,9 @@ def main():
                     item.draw(screen)
                 
                 # Affichage des PV
-                font = pygame.freetype.Font("OpenSans-Regular.ttf", 36)
+                font = pygame.freetype.Font("data/OpenSans-Regular.ttf", 36)
                 draw_text(screen, f'Player HP: {player.health}', font, WHITE, 10, 10)
-                draw_text(screen, f'Boss HP: {boss.health}', font, WHITE, SCREEN_WIDTH - 150, 10)
+                draw_text(screen, f'Boss HP: {boss.health}', font, WHITE, SCREEN_WIDTH - 250, 10)
 
                 pygame.display.flip()
                 clock.tick(FPS)
