@@ -9,6 +9,7 @@ class Cerberus:
         pygame.draw.polygon(self.image, (255, 0, 0), [(30, 0), (0, 60), (60, 60)])  # Dessiner un triangle pour Cerberus
         self.rect = self.image.get_rect(center=(x, y))
         self.health = 500  # Augmentation des PV
+        self.max_health = 300
         self.move_timer = 0
         self.move_interval = 60  # Réduire l'intervalle de mouvement
         self.target_pos = self.get_new_position()

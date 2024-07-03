@@ -1,8 +1,13 @@
 import pygame
 import math
+import configparser
 
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+# Définition des constantes à partir de la configuration
+SCREEN_WIDTH = config.getint('Screen', 'width')
+SCREEN_HEIGHT = config.getint('Screen', 'height')
 
 class Bullet:
     def __init__(self, start_pos, target_pos, color=(255, 255, 255)):

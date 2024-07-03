@@ -1,84 +1,123 @@
 import pygame
 import pygame.freetype
+import configparser
 
-# Initialisation de Pygame
-pygame.init()
+config = configparser.ConfigParser()
+config.read('config.ini')
 
-# Définition des couleurs
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-LIGHT_GRAY = (200, 200, 200)
-DARK_GRAY = (50, 50, 50)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
+font_path = config['Paths']['font']
+background_path = config['Paths']['menu_background']
 
-# Charger la police
-FONT_PATH = "data/OpenSans-Regular.ttf"
-FONT_SIZE = 36
+def draw_text_centered(screen, text, font, color, center_x, center_y):
+    text_surface, rect = font.render(text, color)
+    rect.center = (center_x, center_y)
+    screen.blit(text_surface, rect.topleft)
 
-# Définir la police en utilisant pygame.freetype
-pygame.freetype.init()
-font = pygame.freetype.Font(FONT_PATH, FONT_SIZE)
-
-# Dessiner du texte
-def draw_text(screen, text, font, color, pos):
-    text_surface, _ = font.render(text, color)
-    screen.blit(text_surface, pos)
-
-# Créer un bouton
-def create_button(screen, text, font, color, rect, hover_color):
-    mouse_pos = pygame.mouse.get_pos()
-    if rect.collidepoint(mouse_pos):
-        pygame.draw.rect(screen, hover_color, rect)
-    else:
-        pygame.draw.rect(screen, color, rect)
-    draw_text(screen, text, font, WHITE, (rect.x + 20, rect.y + 10))
-
-# Menu principal
 def main_menu(screen):
-    clock = pygame.time.Clock()
-    button_start = pygame.Rect(300, 200, 200, 50)
-    button_quit = pygame.Rect(300, 300, 200, 50)
+    font = pygame.freetype.Font(font_path, 48)
+    background = pygame.image.load(background_path)
+    background = pygame.transform.scale(background, (screen.get_width(), screen.get_height()))
 
-    while True:
+    button_font = pygame.freetype.Font(font_path, 36)
+    button_text = "Start Game"
+    button_color = (0, 255, 255)
+    button_rect = pygame.Rect(0, 0, 300, 50)
+    button_rect.center = (screen.get_width() // 2, screen.get_height() // 2 + 50)
+
+    running = True
+    while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if button_start.collidepoint(event.pos):
+                if button_rect.collidepoint(event.pos):
                     return True
-                if button_quit.collidepoint(event.pos):
-                    return False
 
-        screen.fill(BLACK)
-        draw_text(screen, "Bullet Hell Game", font, WHITE, (230, 100))
-        create_button(screen, "Start Game", font, DARK_GRAY, button_start, LIGHT_GRAY)
-        create_button(screen, "Quit", font, DARK_GRAY, button_quit, LIGHT_GRAY)
+        screen.blit(background, (0, 0))
+        draw_text_centered(screen, "Bullet Hell Game", font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2 - 50)
+        pygame.draw.rect(screen, button_color, button_rect)
+        draw_text_centered(screen, button_text, button_font, (0, 0, 0), button_rect.centerx, button_rect.centery)
 
         pygame.display.flip()
-        clock.tick(60)
 
-# Menu de sélection des boss
-def boss_selection_menu(screen):
-    clock = pygame.time.Clock()
-    button_boss1 = pygame.Rect(300, 200, 200, 50)
-    button_back = pygame.Rect(300, 300, 200, 50)
+def boss_selection_menu(screen, trophies):
+    font = pygame.freetype.Font(font_path, 36)
+    background = pygame.image.load(background_path)
+    background = pygame.transform.scale(background, (screen.get_width(), screen.get_height()))
 
-    while True:
+    button_font = pygame.freetype.Font(font_path, 36)
+    button_text = "Cerberus"
+    button_color = (0, 255, 255)
+    button_rect = pygame.Rect(0, 0, 300, 50)
+    button_rect.center = (screen.get_width() // 2, screen.get_height() // 2)
+
+    running = True
+    while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if button_boss1.collidepoint(event.pos):
+                if button_rect.collidepoint(event.pos):
                     return True
-                if button_back.collidepoint(event.pos):
-                    return False
 
-        screen.fill(BLACK)
-        draw_text(screen, "Select Boss", font, WHITE, (300, 100))
-        create_button(screen, "Cerberus", font, DARK_GRAY, button_boss1, LIGHT_GRAY)
-        create_button(screen, "Back", font, DARK_GRAY, button_back, LIGHT_GRAY)
+        screen.blit(background, (0, 0))
+        draw_text_centered(screen, "Select a Boss to Fight", font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2 - 50)
+        pygame.draw.rect(screen, button_color, button_rect)
+        draw_text_centered(screen, button_text, button_font, (0, 0, 0), button_rect.centerx, button_rect.centery)
+        draw_text_centered(screen, f"Trophies: {trophies}", font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2 + 100)
 
         pygame.display.flip()
-        clock.tick(60)
+
+def game_over_screen(screen):
+    font = pygame.freetype.Font(font_path, 48)
+    background = pygame.image.load(background_path)
+    background = pygame.transform.scale(background, (screen.get_width(), screen.get_height()))
+
+    button_font = pygame.freetype.Font(font_path, 36)
+    button_text = "Retry"
+    button_color = (255, 0, 0)
+    button_rect = pygame.Rect(0, 0, 300, 50)
+    button_rect.center = (screen.get_width() // 2, screen.get_height() // 2 + 50)
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_rect.collidepoint(event.pos):
+                    return True
+
+        screen.blit(background, (0, 0))
+        draw_text_centered(screen, "Game Over", font, (255, 0, 0), screen.get_width() // 2, screen.get_height() // 2 - 50)
+        pygame.draw.rect(screen, button_color, button_rect)
+        draw_text_centered(screen, button_text, button_font, (0, 0, 0), button_rect.centerx, button_rect.centery)
+
+        pygame.display.flip()
+
+def victory_screen(screen):
+    font = pygame.freetype.Font(font_path, 48)
+    background = pygame.image.load(background_path)
+    background = pygame.transform.scale(background, (screen.get_width(), screen.get_height()))
+
+    button_font = pygame.freetype.Font(font_path, 36)
+    button_text = "Continue"
+    button_color = (0, 255, 0)
+    button_rect = pygame.Rect(0, 0, 300, 50)
+    button_rect.center = (screen.get_width() // 2, screen.get_height() // 2 + 50)
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_rect.collidepoint(event.pos):
+                    return True
+
+        screen.blit(background, (0, 0))
+        draw_text_centered(screen, "Victory!", font, (0, 255, 0), screen.get_width() // 2, screen.get_height() // 2 - 50)
+        pygame.draw.rect(screen, button_color, button_rect)
+        draw_text_centered(screen, button_text, button_font, (0, 0, 0), button_rect.centerx, button_rect.centery)
+
+        pygame.display.flip()
