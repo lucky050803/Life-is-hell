@@ -2,6 +2,7 @@ import pygame
 import sys
 import random
 import configparser
+import cv2
 from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen
 from player import Player
 from boss import Cerberus
@@ -26,6 +27,9 @@ RED = tuple(map(int, config.get('Colors', 'red').split(',')))
 GREEN = tuple(map(int, config.get('Colors', 'green').split(',')))
 BLUE = tuple(map(int, config.get('Colors', 'blue').split(',')))
 
+# Chemin de la vidéo
+video_path = config['Paths']['video_background']
+
 # Création de la fenêtre de jeu
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Bullet Hell Game")
@@ -34,33 +38,33 @@ def draw_text(screen, text, font, color, x, y):
     text_surface, text_rect = font.render(text, color)
     screen.blit(text_surface, (x, y))
 
-def change_background_color(current_color, timer):
-    if timer % 120 < 10:  # Flashe entre bleu, rouge et vert
-        if timer % 30 < 10:
-            return BLUE
-        elif timer % 30 < 20:
-            return RED
-        else:
-            return GREEN
-    elif timer % 240 < 120:
-        return (50, 50, 50)  # Gris
-    else:
-        return (0, 0, 0)  # Noir
-
 def draw_health_bar(screen, x, y, width, height, current_health, max_health):
-    pass
-    #ratio = current_health / max_health
-    #pygame.draw.rect(screen, RED, (x, y, width, height))
-    #pygame.draw.rect(screen, GREEN, (x, y, width * ratio, height))
+    ratio = current_health / max_health
+    pygame.draw.rect(screen, RED, (x, y, width, height))
+    pygame.draw.rect(screen, GREEN, (x, y, width * ratio, height))
+
+# Fonction pour lire la vidéo
+def play_video_background(video_path, screen):
+    cap = cv2.VideoCapture(video_path)
+    ret, frame = cap.read()
+    if not ret:
+        return None
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    frame = cv2.resize(frame, (SCREEN_WIDTH, SCREEN_HEIGHT))
+    frame = pygame.surfarray.make_surface(frame)
+    return frame, cap
 
 # Boucle principale du jeu
 def main():
     clock = pygame.time.Clock()
     trophies = 0
 
+    video_frame, cap = play_video_background(video_path, screen)
+    frame_index = 0
+
     while True:
-        if main_menu(screen):
-            if boss_selection_menu(screen, trophies):
+        if main_menu(screen, video_frame):
+            if boss_selection_menu(screen, trophies, video_frame):
                 # Initialisation du joueur, du boss et des objets de soin
                 player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50)
                 boss = Cerberus(SCREEN_WIDTH // 2, 50)
@@ -69,7 +73,6 @@ def main():
                 health_items = [HealthItem(random.randint(50, SCREEN_WIDTH - 50), random.randint(50, SCREEN_HEIGHT - 50)) for _ in range(3)]
 
                 # Variables pour le changement de couleur de fond
-                background_color = (0, 0, 0)
                 timer = 0
 
                 # Liste pour le texte de fond dynamique
@@ -88,7 +91,16 @@ def main():
 
                     keys = pygame.key.get_pressed()
                     player.update(keys)
-                    
+
+                    # Lire et afficher la vidéo de fond
+                    ret, frame = cap.read()
+                    if not ret:
+                        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                        ret, frame = cap.read()
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    frame = cv2.resize(frame, (SCREEN_WIDTH, SCREEN_HEIGHT))
+                    video_frame = pygame.surfarray.make_surface(frame)
+
                     # Mettre à jour les balles du joueur
                     for bullet in player_bullets[:]:
                         bullet.update()
@@ -118,10 +130,6 @@ def main():
                             player.health = min(player.health + 10, 100)  # Le joueur regagne 10 HP
                             health_items.remove(item)
 
-                    # Mettre à jour la couleur de fond
-                    background_color = change_background_color(background_color, timer)
-                    timer += 1
-
                     # Mettre à jour et dessiner le texte de fond dynamique
                     for text in background_texts[:]:
                         text.update()
@@ -130,11 +138,11 @@ def main():
                             background_texts.append(BackgroundText(SCREEN_WIDTH, SCREEN_HEIGHT, config['Paths']['font']))
                         text.draw(screen)
 
-                    screen.fill(background_color)
+                    screen.blit(video_frame, (0, 0))
 
                     player.draw(screen)
                     boss.draw(screen)
-                    
+
                     for bullet in player_bullets:
                         bullet.draw(screen)
 
@@ -143,10 +151,10 @@ def main():
 
                     for item in health_items:
                         item.draw(screen)
-                    
+
                     # Affichage des PV du joueur
-                    font = pygame.freetype.Font(config['Paths']['font'], 14)
-                    draw_text(screen, f'HP: {player.health}', font, WHITE, 10, 10)
+                    font = pygame.freetype.Font(config['Paths']['font'], 36)
+                    draw_text(screen, f'Player HP: {player.health}', font, WHITE, 10, 10)
 
                     # Affichage de la barre de PV du boss
                     draw_health_bar(screen, SCREEN_WIDTH - 310, 10, 300, 25, boss.health, boss.max_health)
@@ -157,13 +165,13 @@ def main():
                     # Vérifier les conditions de victoire et de défaite
                     if player.health <= 0:
                         game_active = False
-                        if not game_over_screen(screen):
+                        if not game_over_screen(screen, video_frame):
                             pygame.quit()
                             sys.exit()
                     elif boss.health <= 0:
                         game_active = False
                         trophies += 1
-                        if not victory_screen(screen):
+                        if not victory_screen(screen, video_frame):
                             pygame.quit()
                             sys.exit()
         else:
