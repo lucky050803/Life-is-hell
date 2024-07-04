@@ -1,151 +1,135 @@
 import pygame
 import pygame.freetype
-import configparser
-from moviepy.editor import VideoFileClip
+from config import load_config
+import sys 
 
-config = configparser.ConfigParser()
-config.read('config.ini')
-
+config = load_config()
 font_path = config['Paths']['font']
-video_path = config['Paths']['menu_background']
-menu_music_path = config['Music']['menu_music']
+font_size = 24
 
-def draw_text_centered(screen, text, font, color, center_x, center_y):
-    text_surface, rect = font.render(text, color)
-    rect.center = (center_x, center_y)
-    screen.blit(text_surface, rect.topleft)
+pygame.freetype.init()
+font = pygame.freetype.Font(font_path, font_size)
 
-def load_video_background(path, width, height):
-    clip = VideoFileClip(path)
-    clip = clip.resize((width, height))
-    return [pygame.image.frombuffer(frame.tobytes(), frame.shape[1::-1], "RGB") for frame in clip.iter_frames()]
+def draw_text_centered(screen, text, font, color, x, y):
+    text_surface, text_rect = font.render(text, color)
+    text_rect.center = (x, y)
+    screen.blit(text_surface, text_rect)
 
-def main_menu(screen):
-    pygame.mixer.music.load(menu_music_path)
-    pygame.mixer.music.play(-1)
+def main_menu(screen, video_frames):
+    button_font = pygame.freetype.Font(font_path, font_size)
 
-    font = pygame.freetype.Font(font_path, 48)
-    video_frames = load_video_background(video_path, screen.get_width(), screen.get_height())
-
-    button_font = pygame.freetype.Font(font_path, 36)
-    button_text = "Start Game"
-    button_color = (0, 255, 255)
-    button_rect = pygame.Rect(0, 0, 300, 50)
-    button_rect.center = (screen.get_width() // 2, screen.get_height() // 2 + 50)
+    button_texts = ["Play", "Settings", "Quit"]
+    button_rects = [pygame.Rect(0, 0, 200, 50) for _ in button_texts]
+    for i, rect in enumerate(button_rects):
+        rect.center = (screen.get_width() // 2, screen.get_height() // 2 + i * 60)
 
     running = True
-    timer = 0
+    frame_index = 0
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return False
+                pygame.quit()
+                sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if button_rect.collidepoint(event.pos):
-                    return True
+                for i, rect in enumerate(button_rects):
+                    if rect.collidepoint(event.pos):
+                        return button_texts[i].lower()
 
-        frame = video_frames[timer % len(video_frames)]
-        screen.blit(frame, (0, 0))
-        timer += 1
-
-        draw_text_centered(screen, "Bullet Hell Game", font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2 - 50)
-        pygame.draw.rect(screen, button_color, button_rect)
-        draw_text_centered(screen, button_text, button_font, (0, 0, 0), button_rect.centerx, button_rect.centery)
-
-        pygame.display.flip()
-
-def boss_selection_menu(screen, trophies):
-    font = pygame.freetype.Font(font_path, 36)
-    video_frames = load_video_background(video_path, screen.get_width(), screen.get_height())
-
-    button_font = pygame.freetype.Font(font_path, 36)
-    button_text = "Cerberus"
-    button_color = (0, 255, 255)
-    button_rect = pygame.Rect(0, 0, 300, 50)
-    button_rect.center = (screen.get_width() // 2, screen.get_height() // 2)
-
-    running = True
-    timer = 0
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return False
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if button_rect.collidepoint(event.pos):
-                    return True
-
-        frame = video_frames[timer % len(video_frames)]
-        screen.blit(frame, (0, 0))
-        timer += 1
+        screen.blit(video_frames[frame_index % len(video_frames)], (0, 0))
+        frame_index += 1
         
-        draw_text_centered(screen, "Select a Boss to Fight", font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2 - 50)
-        pygame.draw.rect(screen, button_color, button_rect)
-        draw_text_centered(screen, button_text, button_font, (0, 0, 0), button_rect.centerx, button_rect.centery)
-        draw_text_centered(screen, f"Trophies: {trophies}", font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2 + 100)
+        draw_text_centered(screen, "Main Menu", font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2 - 100)
+        
+        for i, rect in enumerate(button_rects):
+            pygame.draw.rect(screen, (0, 255, 255), rect)
+            draw_text_centered(screen, button_texts[i], button_font, (0, 0, 0), rect.centerx, rect.centery)
 
         pygame.display.flip()
 
-def game_over_screen(screen):
-    pygame.mixer.music.load(menu_music_path)
-    pygame.mixer.music.play(-1)
+def boss_selection_menu(screen, trophies, video_frames):
+    button_font = pygame.freetype.Font(font_path, font_size)
 
-    font = pygame.freetype.Font(font_path, 48)
-    video_frames = load_video_background(video_path, screen.get_width(), screen.get_height())
-
-    button_font = pygame.freetype.Font(font_path, 36)
-    button_text = "Retry"
-    button_color = (255, 0, 0)
-    button_rect = pygame.Rect(0, 0, 300, 50)
-    button_rect.center = (screen.get_width() // 2, screen.get_height() // 2 + 50)
+    button_texts = ["Cerberus", "Back"]
+    button_rects = [pygame.Rect(0, 0, 200, 50) for _ in button_texts]
+    for i, rect in enumerate(button_rects):
+        rect.center = (screen.get_width() // 2, screen.get_height() // 2 + i * 60)
 
     running = True
-    timer = 0
+    frame_index = 0
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return False
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                for i, rect in enumerate(button_rects):
+                    if rect.collidepoint(event.pos):
+                        if button_texts[i] == "Back":
+                            return False
+                        else:
+                            return True
+
+        screen.blit(video_frames[frame_index % len(video_frames)], (0, 0))
+        frame_index += 1
+        
+        draw_text_centered(screen, f"Trophies: {trophies}", font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2 - 100)
+        
+        for i, rect in enumerate(button_rects):
+            pygame.draw.rect(screen, (0, 255, 255), rect)
+            draw_text_centered(screen, button_texts[i], button_font, (0, 0, 0), rect.centerx, rect.centery)
+
+        pygame.display.flip()
+
+def game_over_screen(screen, video_frames):
+    button_font = pygame.freetype.Font(font_path, font_size)
+
+    button_text = "Back to Boss Selection"
+    button_rect = pygame.Rect(0, 0, 300, 50)
+    button_rect.center = (screen.get_width() // 2, screen.get_height() // 2 + 100)
+
+    running = True
+    frame_index = 0
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if button_rect.collidepoint(event.pos):
                     return True
 
-        frame = video_frames[timer % len(video_frames)]
-        screen.blit(frame, (0, 0))
-        timer += 1
+        screen.blit(video_frames[frame_index % len(video_frames)], (0, 0))
+        frame_index += 1
         
         draw_text_centered(screen, "Game Over", font, (255, 0, 0), screen.get_width() // 2, screen.get_height() // 2 - 50)
-        pygame.draw.rect(screen, button_color, button_rect)
+        pygame.draw.rect(screen, (0, 255, 255), button_rect)
         draw_text_centered(screen, button_text, button_font, (0, 0, 0), button_rect.centerx, button_rect.centery)
 
         pygame.display.flip()
 
-def victory_screen(screen):
-    pygame.mixer.music.load(menu_music_path)
-    pygame.mixer.music.play(-1)
+def victory_screen(screen, video_frames):
+    button_font = pygame.freetype.Font(font_path, font_size)
 
-    font = pygame.freetype.Font(font_path, 48)
-    video_frames = load_video_background(video_path, screen.get_width(), screen.get_height())
-
-    button_font = pygame.freetype.Font(font_path, 36)
-    button_text = "Continue"
-    button_color = (0, 255, 0)
+    button_text = "Back to Boss Selection"
     button_rect = pygame.Rect(0, 0, 300, 50)
-    button_rect.center = (screen.get_width() // 2, screen.get_height() // 2 + 50)
+    button_rect.center = (screen.get_width() // 2, screen.get_height() // 2 + 100)
 
     running = True
-    timer = 0
+    frame_index = 0
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return False
+                pygame.quit()
+                sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if button_rect.collidepoint(event.pos):
                     return True
 
-        frame = video_frames[timer % len(video_frames)]
-        screen.blit(frame, (0, 0))
-        timer += 1
+        screen.blit(video_frames[frame_index % len(video_frames)], (0, 0))
+        frame_index += 1
         
         draw_text_centered(screen, "Victory!", font, (0, 255, 0), screen.get_width() // 2, screen.get_height() // 2 - 50)
-        pygame.draw.rect(screen, button_color, button_rect)
+        pygame.draw.rect(screen, (0, 255, 255), button_rect)
         draw_text_centered(screen, button_text, button_font, (0, 0, 0), button_rect.centerx, button_rect.centery)
 
         pygame.display.flip()

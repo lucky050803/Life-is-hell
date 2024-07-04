@@ -4,21 +4,22 @@ import random
 import configparser
 from moviepy.editor import VideoFileClip
 from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen
+from setting_menu import settings_menu
 from player import Player
 from boss import Cerberus
 from item import HealthItem
 from background_text import BackgroundText
+from config import load_config, save_config
 
 # Initialisation de Pygame
 pygame.init()
 
 # Charger la configuration
-config = configparser.ConfigParser()
-config.read('config.ini')
+config = load_config()
 
 # Définition des constantes à partir de la configuration
-SCREEN_WIDTH = config.getint('Screen', 'width')
-SCREEN_HEIGHT = config.getint('Screen', 'height')
+SCREEN_WIDTH = 600
+SCREEN_HEIGHT = 600
 FPS = 60
 
 # Couleurs
@@ -32,13 +33,15 @@ video_path = config['Paths']['menu_background']
 font_path = config['Paths']['font']
 menu_music_path = config['Music']['menu_music']
 boss_music_path = config['Music']['boss_music']
+volume = config.getfloat('Music', 'volume')
+
+# Initialisation du module de mixage
+pygame.mixer.init()
+pygame.mixer.music.set_volume(volume)
 
 # Création de la fenêtre de jeu
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Bullet Hell Game")
-
-# Initialisation du module de mixage
-pygame.mixer.init()
 
 def draw_text(screen, text, font, color, x, y):
     text_surface, text_rect = font.render(text, color)
@@ -57,15 +60,23 @@ def change_background_color(timer):
     else:
         return (0, 0, 0)  # Noir
 
-def draw_health_bar(screen, x, y, width, height, current_health, max_health):
-    ratio = current_health / max_health
-    pygame.draw.rect(screen, RED, (x, y, width, height))
-    pygame.draw.rect(screen, GREEN, (x, y, width * ratio, height))
+def save_game(trophies, bosses_defeated, volume):
+    config['Save']['trophies'] = str(trophies)
+    config['Save']['bosses_defeated'] = ','.join(bosses_defeated)
+    config['Music']['volume'] = str(volume)
+    save_config(config)
+
+def load_game():
+    trophies = config.getint('Save', 'trophies')
+    bosses_defeated = config.get('Save', 'bosses_defeated').split(',')
+    volume = config.getfloat('Music', 'volume')
+    return trophies, bosses_defeated, volume
 
 # Boucle principale du jeu
 def main():
     clock = pygame.time.Clock()
-    trophies = 0
+    trophies, bosses_defeated, volume = load_game()
+    pygame.mixer.music.set_volume(volume)
 
     # Charger la vidéo de fond et réduire sa taille
     clip = VideoFileClip(video_path)
@@ -75,8 +86,9 @@ def main():
     while True:
         pygame.mixer.music.load(menu_music_path)
         pygame.mixer.music.play(-1)
-        if main_menu(screen):
-            if boss_selection_menu(screen, trophies):
+        choice = main_menu(screen, video_frames)
+        if choice == "play":
+            if boss_selection_menu(screen, trophies, video_frames):
                 pygame.mixer.music.load(boss_music_path)
                 pygame.mixer.music.play(-1)
 
@@ -111,7 +123,7 @@ def main():
                     for bullet in player_bullets[:]:
                         bullet.update()
                         if bullet.rect.colliderect(boss.rect):
-                            boss.health -= 25
+                            boss.health -= 10
                             player_bullets.remove(bullet)
                         elif bullet.rect.left < 0 or bullet.rect.right > SCREEN_WIDTH or bullet.rect.top < 0 or bullet.rect.bottom > SCREEN_HEIGHT:
                             player_bullets.remove(bullet)
@@ -165,11 +177,8 @@ def main():
                         item.draw(screen)
                     
                     # Affichage des PV du joueur
-                    font = pygame.freetype.Font(font_path, 36)
+                    font = pygame.freetype.Font(font_path, 24)
                     draw_text(screen, f'Player HP: {player.health}', font, WHITE, 10, 10)
-
-                    # Affichage de la barre de PV du boss
-                    #draw_health_bar(screen, SCREEN_WIDTH - 310, 10, 200, 10, boss.health, boss.max_health)
 
                     pygame.display.flip()
                     clock.tick(FPS)
@@ -178,17 +187,23 @@ def main():
                     if player.health <= 0:
                         game_active = False
                         pygame.mixer.music.stop()
-                        if not game_over_screen(screen):
+                        if not game_over_screen(screen, video_frames):
                             pygame.quit()
                             sys.exit()
                     elif boss.health <= 0:
                         game_active = False
                         pygame.mixer.music.stop()
                         trophies += 1
-                        if not victory_screen(screen):
+                        bosses_defeated.append("Cerberus")
+                        if not victory_screen(screen, video_frames):
                             pygame.quit()
                             sys.exit()
-        else:
+                        save_game(trophies, bosses_defeated, volume)
+        elif choice == "settings":
+            volume = settings_menu(screen, volume, video_frames)
+            pygame.mixer.music.set_volume(volume)
+            save_game(trophies, bosses_defeated, volume)
+        elif choice == "quit":
             pygame.quit()
             sys.exit()
 
