@@ -3,7 +3,7 @@ import sys
 import random
 import configparser
 from moviepy.editor import VideoFileClip
-from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen
+from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen, credits_menu
 from setting_menu import settings_menu
 from player import Player
 from boss import Cerberus
@@ -29,6 +29,7 @@ GREEN = tuple(map(int, config.get('Colors', 'green').split(',')))
 BLUE = tuple(map(int, config.get('Colors', 'blue').split(',')))
 
 # Chemins des fichiers
+font_size = float(config['fonts']['fontSize'])
 video_path = config['Paths']['menu_background']
 font_path = config['Paths']['font']
 menu_music_path = config['Music']['menu_music']
@@ -42,6 +43,34 @@ pygame.mixer.music.set_volume(volume)
 # Création de la fenêtre de jeu
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Bullet Hell Game")
+
+def intro_screen(screen, font, video_frames):
+    clock = pygame.time.Clock()
+    alpha = 0
+    fade_in_duration = 60  # 1 second at 60 FPS
+    frame_index = 0
+
+    while alpha < 255:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+        
+        frame = video_frames[frame_index % len(video_frames)]
+        screen.blit(frame, (0, 0))
+        frame_index += 1
+        
+        title_surface, title_rect = font.render("Bullet Hell Game", (255, 255, 255, alpha))
+        title_rect.center = (screen.get_width() // 2, screen.get_height() // 2)
+        screen.blit(title_surface, title_rect)
+        
+        pygame.display.flip()
+        clock.tick(FPS)
+        
+        alpha = min(alpha + 255 // fade_in_duration, 255)
+
+    pygame.time.wait(2000)  # Wait for 2 seconds after fade-in
+
 
 def draw_text(screen, text, font, color, x, y):
     text_surface, text_rect = font.render(text, color)
@@ -82,6 +111,12 @@ def main():
     clip = VideoFileClip(video_path)
     clip = clip.resize((SCREEN_WIDTH, SCREEN_HEIGHT))
     video_frames = [pygame.image.frombuffer(frame.tobytes(), frame.shape[1::-1], "RGB") for frame in clip.iter_frames()]
+
+    # Initialiser la police
+    font = pygame.freetype.Font(font_path, font_size)
+
+    # Afficher l'écran de début
+    intro_screen(screen, font, video_frames)
 
     while True:
         pygame.mixer.music.load(menu_music_path)
@@ -177,7 +212,6 @@ def main():
                         item.draw(screen)
                     
                     # Affichage des PV du joueur
-                    font = pygame.freetype.Font(font_path, 24)
                     draw_text(screen, f'Player HP: {player.health}', font, WHITE, 10, 10)
 
                     pygame.display.flip()
@@ -203,9 +237,14 @@ def main():
             volume = settings_menu(screen, volume, video_frames)
             pygame.mixer.music.set_volume(volume)
             save_game(trophies, bosses_defeated, volume)
+        elif choice == "credits":
+            credits_menu(screen, video_frames)
         elif choice == "quit":
             pygame.quit()
             sys.exit()
+
+if __name__ == "__main__":
+    main()
 
 if __name__ == "__main__":
     main()
