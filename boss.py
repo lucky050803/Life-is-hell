@@ -9,7 +9,7 @@ class Cerberus:
         pygame.draw.polygon(self.image, (255, 0, 0), [(30, 0), (0, 60), (60, 60)])  # Dessiner un triangle pour Cerberus
         self.rect = self.image.get_rect(center=(x, y))
         self.health = 500  # Augmentation des PV
-        self.max_health = 300
+        self.max_health = 500
         self.move_timer = 0
         self.move_interval = 60  # Réduire l'intervalle de mouvement
         self.target_pos = self.get_new_position()
@@ -17,6 +17,11 @@ class Cerberus:
         self.attack_interval = 90  # Réduire l'intervalle d'attaque
         self.attack_types = [self.explode, self.shoot_rebounding_bullets, self.shoot_triangle_bullets]
         self.phase_two = False
+        self.blink_timer = 0
+        self.blink_interval = 10
+        self.visible = True
+        self.dying = False
+        self.fade_alpha = 255
 
     def get_new_position(self):
         return (random.randint(100, 700), random.randint(100, 500))
@@ -56,12 +61,24 @@ class Cerberus:
         return bullets
 
     def update(self):
+        if self.dying:
+            self.fade_alpha -= 5
+            if self.fade_alpha <= 0:
+                self.fade_alpha = 0
+            return []
+
         self.move_timer += 1
         self.attack_timer += 1
 
         if self.health <= 250 and not self.phase_two:  # Vérifie si Cerberus est à la moitié de sa vie
             self.phase_two = True
             self.attack_interval = 60  # Réduit encore plus l'intervalle d'attaque
+
+        if self.phase_two:
+            self.blink_timer += 1
+            if self.blink_timer >= self.blink_interval:
+                self.blink_timer = 0
+                self.visible = not self.visible
 
         if self.move_timer >= self.move_interval:
             self.move_timer = 0
@@ -83,6 +100,12 @@ class Cerberus:
         return []
 
     def draw(self, screen):
+        if not self.visible and self.phase_two:
+            return
+        if self.dying:
+            self.image.set_alpha(self.fade_alpha)
         screen.blit(self.image, self.rect.topleft)
 
-
+    def start_dying(self):
+        self.dying = True
+        self.fade_alpha = 255

@@ -50,7 +50,8 @@ def main_menu(screen, video_frames):
 def boss_selection_menu(screen, trophies, video_frames):
     button_font = pygame.freetype.Font(font_path, font_size)
 
-    button_texts = ["Cerberus", "Back"]
+    boss_names = ["Cerberus", "OtherBoss"]  # Ajouter les autres noms de boss ici
+    button_texts = boss_names + ["Back"]
     button_rects = [pygame.Rect(0, 0, 200, 50) for _ in button_texts]
     for i, rect in enumerate(button_rects):
         rect.center = (screen.get_width() // 2, screen.get_height() // 2 + i * 60)
@@ -66,9 +67,9 @@ def boss_selection_menu(screen, trophies, video_frames):
                 for i, rect in enumerate(button_rects):
                     if rect.collidepoint(event.pos):
                         if button_texts[i] == "Back":
-                            return False
+                            return None
                         else:
-                            return True
+                            return boss_names[i]
 
         screen.blit(video_frames[frame_index % len(video_frames)], (0, 0))
         frame_index += 1
@@ -80,6 +81,7 @@ def boss_selection_menu(screen, trophies, video_frames):
             draw_text_centered(screen, button_texts[i], button_font, (0, 0, 0), rect.centerx, rect.centery)
 
         pygame.display.flip()
+
 
 def game_over_screen(screen, video_frames):
     button_font = pygame.freetype.Font(font_path, font_size)
@@ -130,9 +132,9 @@ def credits_menu(screen, video_frames):
         frame_index += 1
         
         draw_text_centered(screen, "Credits", font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2 - 100)
-        draw_text_centered(screen, "Game Developer: Your Name", font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2)
-        draw_text_centered(screen, "Graphics: Your Name", font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2 + 40)
-        draw_text_centered(screen, "Music: Your Name", font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2 + 80)
+        draw_text_centered(screen, "Game Developer: Lucca Masi", font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2)
+        draw_text_centered(screen, "Graphics: Lucca Masi", font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2 + 40)
+        #draw_text_centered(screen, "Music: Your Name", font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2 + 80)
         
         pygame.draw.rect(screen, (0, 255, 255), button_rect)
         draw_text_centered(screen, button_text, button_font, (0, 0, 0), button_rect.centerx, button_rect.centery)

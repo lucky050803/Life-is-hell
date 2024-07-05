@@ -29,11 +29,9 @@ GREEN = tuple(map(int, config.get('Colors', 'green').split(',')))
 BLUE = tuple(map(int, config.get('Colors', 'blue').split(',')))
 
 # Chemins des fichiers
-font_size = float(config['fonts']['fontSize'])
 video_path = config['Paths']['menu_background']
 font_path = config['Paths']['font']
 menu_music_path = config['Music']['menu_music']
-boss_music_path = config['Music']['boss_music']
 volume = config.getfloat('Music', 'volume')
 
 # Initialisation du module de mixage
@@ -44,37 +42,11 @@ pygame.mixer.music.set_volume(volume)
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Bullet Hell Game")
 
-def intro_screen(screen, font, video_frames):
-    clock = pygame.time.Clock()
-    alpha = 0
-    fade_in_duration = 60  # 1 second at 60 FPS
-    frame_index = 0
-
-    while alpha < 255:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-        
-        frame = video_frames[frame_index % len(video_frames)]
-        screen.blit(frame, (0, 0))
-        frame_index += 1
-        
-        title_surface, title_rect = font.render("Bullet Hell Game", (255, 255, 255, alpha))
-        title_rect.center = (screen.get_width() // 2, screen.get_height() // 2)
-        screen.blit(title_surface, title_rect)
-        
-        pygame.display.flip()
-        clock.tick(FPS)
-        
-        alpha = min(alpha + 255 // fade_in_duration, 255)
-
-    pygame.time.wait(2000)  # Wait for 2 seconds after fade-in
-
-
+font = pygame.font.Font(font_path, 20)
 def draw_text(screen, text, font, color, x, y):
-    text_surface, text_rect = font.render(text, color)
-    screen.blit(text_surface, (x, y))
+    text_surface = font.render(text, True, color)
+    text_rect = text_surface.get_rect(topleft=(x, y))
+    screen.blit(text_surface, text_rect)
 
 def change_background_color(timer):
     if timer % 120 < 10:  # Flashe entre bleu, rouge et vert
@@ -101,6 +73,21 @@ def load_game():
     volume = config.getfloat('Music', 'volume')
     return trophies, bosses_defeated, volume
 
+def load_boss_assets(boss_name):
+    boss_section = f'Boss_{boss_name}'
+    background_path = config[boss_section]['background']
+    music_path = config[boss_section]['music']
+    
+    # Charger la vidéo de fond et réduire sa taille
+    clip = VideoFileClip(background_path)
+    clip = clip.resize((SCREEN_WIDTH, SCREEN_HEIGHT))
+    video_frames = [pygame.image.frombuffer(frame.tobytes(), frame.shape[1::-1], "RGB") for frame in clip.iter_frames()]
+    
+    return video_frames, music_path
+
+def constrain_mouse():
+    pass
+
 # Boucle principale du jeu
 def main():
     clock = pygame.time.Clock()
@@ -112,24 +99,20 @@ def main():
     clip = clip.resize((SCREEN_WIDTH, SCREEN_HEIGHT))
     video_frames = [pygame.image.frombuffer(frame.tobytes(), frame.shape[1::-1], "RGB") for frame in clip.iter_frames()]
 
-    # Initialiser la police
-    font = pygame.freetype.Font(font_path, font_size)
-
-    # Afficher l'écran de début
-    intro_screen(screen, font, video_frames)
-
     while True:
         pygame.mixer.music.load(menu_music_path)
         pygame.mixer.music.play(-1)
         choice = main_menu(screen, video_frames)
         if choice == "play":
-            if boss_selection_menu(screen, trophies, video_frames):
+            boss_name = boss_selection_menu(screen, trophies, video_frames)
+            if boss_name:
+                boss_video_frames, boss_music_path = load_boss_assets(boss_name)
                 pygame.mixer.music.load(boss_music_path)
                 pygame.mixer.music.play(-1)
 
                 # Initialisation du joueur, du boss et des objets de soin
                 player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50)
-                boss = Cerberus(SCREEN_WIDTH // 2, 50)
+                boss = Cerberus(SCREEN_WIDTH // 2, 50)  # Changez cela si vous avez plusieurs boss
                 player_bullets = []
                 boss_bullets = []
                 health_items = [HealthItem(random.randint(50, SCREEN_WIDTH - 50), random.randint(50, SCREEN_HEIGHT - 50)) for _ in range(3)]
@@ -196,7 +179,7 @@ def main():
                         text.draw(screen)
 
                     # Afficher la vidéo de fond
-                    frame = video_frames[timer % len(video_frames)]
+                    frame = boss_video_frames[timer % len(boss_video_frames)]
                     screen.blit(frame, (0, 0))
 
                     player.draw(screen)
@@ -217,19 +200,24 @@ def main():
                     pygame.display.flip()
                     clock.tick(FPS)
 
+                    # Constrain the mouse position
+                    constrain_mouse()
+
                     # Vérifier les conditions de victoire et de défaite
                     if player.health <= 0:
                         game_active = False
                         pygame.mixer.music.stop()
-                        if not game_over_screen(screen, video_frames):
+                        if not game_over_screen(screen, boss_video_frames):
                             pygame.quit()
                             sys.exit()
-                    elif boss.health <= 0:
+                    elif boss.health <= 0 and not boss.dying:
+                        boss.start_dying()
+                    elif boss.health <= 0 and boss.fade_alpha == 0:
                         game_active = False
                         pygame.mixer.music.stop()
                         trophies += 1
-                        bosses_defeated.append("Cerberus")
-                        if not victory_screen(screen, video_frames):
+                        bosses_defeated.append(boss_name)
+                        if not victory_screen(screen, boss_video_frames):
                             pygame.quit()
                             sys.exit()
                         save_game(trophies, bosses_defeated, volume)
@@ -242,9 +230,6 @@ def main():
         elif choice == "quit":
             pygame.quit()
             sys.exit()
-
-if __name__ == "__main__":
-    main()
 
 if __name__ == "__main__":
     main()
