@@ -5,28 +5,55 @@ import configparser
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-# Définition des constantes à partir de la configuration
 SCREEN_WIDTH = config.getint('Screen', 'width')
 SCREEN_HEIGHT = config.getint('Screen', 'height')
 
 class Bullet:
-    def __init__(self, start_pos, target_pos, color=(255, 255, 255)):
+    def __init__(self, start_pos, target_pos, speed=10, color=(255, 255, 255)):
         self.image = pygame.Surface((10, 10))
         self.image.fill(color)
         self.rect = self.image.get_rect(center=start_pos)
-        self.speed = 10
+        self.speed = speed
+        self.color = color
         self.velocity = self.calculate_velocity(start_pos, target_pos)
+        self.target_pos = target_pos
 
     def calculate_velocity(self, start_pos, target_pos):
         angle = math.atan2(target_pos[1] - start_pos[1], target_pos[0] - start_pos[0])
-        return (self.speed * math.cos(angle), self.speed * math.sin(angle))
-    
+        return self.speed * math.cos(angle), self.speed * math.sin(angle)
+
     def update(self):
         self.rect.x += self.velocity[0]
         self.rect.y += self.velocity[1]
 
     def draw(self, screen):
         screen.blit(self.image, self.rect.topleft)
+
+class ExplodingBullet(Bullet):
+    def __init__(self, start_pos, target_pos):
+        super().__init__(start_pos, target_pos, color=(255, 0, 0))
+        self.exploded = False
+
+    def update(self):
+        if not self.exploded:
+            super().update()
+            if math.hypot(self.rect.centerx - self.target_pos[0], self.rect.centery - self.target_pos[1]) < 10:
+                self.exploded = True
+                return [Bullet(self.rect.center, self.target_pos, speed=5, color=(255, 255, 0)) for _ in range(8)]
+        return []
+
+class DamageLineBullet(Bullet):
+    def __init__(self, start_pos, end_pos, duration):
+        super().__init__(start_pos, end_pos, color=(255, 0, 0))
+        self.duration = duration
+
+    def update(self):
+        self.duration -= 1
+        return []
+
+    def draw(self, screen):
+        if self.duration > 0:
+            pygame.draw.line(screen, self.color, self.rect.topleft, (self.rect.x, self.rect.y + 500), 5)
 
 class ReboundingBullet(Bullet):
     def update(self):
