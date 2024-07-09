@@ -13,7 +13,7 @@ class Player:
     def update(self, keys):
         if keys[pygame.K_LEFT] and self.rect.left > 0:
             self.rect.x -= self.speed
-        if keys[pygame.K_RIGHT] and self.rect.right < 800:
+        if keys[pygame.K_RIGHT] and self.rect.right < 600:
             self.rect.x += self.speed
         if keys[pygame.K_UP] and self.rect.top > 0:
             self.rect.y -= self.speed

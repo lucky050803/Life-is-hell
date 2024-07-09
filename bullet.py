@@ -33,8 +33,13 @@ class ExplodingBullet(Bullet):
     def __init__(self, start_pos, target_pos):
         super().__init__(start_pos, target_pos, color=(255, 0, 0))
         self.exploded = False
+        self.timer = 180  # 3 seconds at 60 FPS
 
     def update(self):
+        self.timer -= 1
+        if self.timer <= 0:
+            self.exploded = True
+
         if not self.exploded:
             super().update()
             if math.hypot(self.rect.centerx - self.target_pos[0], self.rect.centery - self.target_pos[1]) < 10:
@@ -43,17 +48,31 @@ class ExplodingBullet(Bullet):
         return []
 
 class DamageLineBullet(Bullet):
-    def __init__(self, start_pos, end_pos, duration):
+    def __init__(self, start_pos, end_pos, duration, transparency_duration=60):
         super().__init__(start_pos, end_pos, color=(255, 0, 0))
         self.duration = duration
+        self.transparency_duration = transparency_duration
+        self.end_pos = end_pos
+        self.damage = 10
+        self.rect = pygame.Rect(*start_pos, 5, 600 if start_pos[0] == end_pos[0] else 5)
 
     def update(self):
         self.duration -= 1
+        if self.duration > 0 and self.duration <= self.transparency_duration:
+            alpha = int(255 * (self.duration / self.transparency_duration))
+            self.image.set_alpha(alpha)
         return []
 
     def draw(self, screen):
         if self.duration > 0:
-            pygame.draw.line(screen, self.color, self.rect.topleft, (self.rect.x, self.rect.y + 500), 5)
+            if self.duration <= self.transparency_duration:
+                alpha = int(255 * (self.duration / self.transparency_duration))
+                temp_image = pygame.Surface(self.rect.size, pygame.SRCALPHA)
+                temp_image.fill((*self.color, alpha))
+                screen.blit(temp_image, self.rect.topleft)
+            else:
+                pygame.draw.line(screen, self.color, self.rect.topleft, self.end_pos, 5)
+
 
 class ReboundingBullet(Bullet):
     def update(self):

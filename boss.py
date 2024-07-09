@@ -2,7 +2,7 @@ import pygame
 import random
 import math
 from bullet import Bullet, ReboundingBullet, TriangleBullet
-
+from bullet import Bullet, ExplodingBullet, DamageLineBullet
 class Cerberus:
     def __init__(self, x, y):
         self.image = pygame.Surface((60, 60), pygame.SRCALPHA)  # Réduire la taille de Cerberus
@@ -99,11 +99,6 @@ class Cerberus:
 
 
 
-import pygame
-import random
-import math
-from bullet import Bullet, ExplodingBullet, DamageLineBullet
-
 class Prometheus:
     def __init__(self, x, y):
         self.rect = pygame.Rect(x - 30, y - 30, 60, 60)
@@ -120,7 +115,7 @@ class Prometheus:
         self.fade_alpha = 255
         self.color = (255, 0, 0)
         self.line_timers = []
-        self.line_duration = 300  # 5 seconds at 60 FPS
+        self.line_duration = 500
 
     def get_new_position(self):
         return random.randint(50, 550), random.randint(50, 550)
@@ -135,9 +130,15 @@ class Prometheus:
 
     def place_damage_line(self):
         if len(self.line_timers) < self.phase:
-            start_x = random.randint(50, 550)
-            bullets = [DamageLineBullet((start_x, 50), (start_x, 550), self.line_duration)]
-            self.line_timers.append(self.line_duration)
+            if self.phase == 1 or (self.phase == 3 and random.choice([True, False])):
+                # Vertical line
+                start_x = random.randint(50, 550)
+                bullets = [DamageLineBullet((start_x, 0), (start_x, 600), 180)]
+            else:
+                # Horizontal line
+                start_y = random.randint(50, 550)
+                bullets = [DamageLineBullet((0, start_y), (600, start_y), 180)]
+            self.line_timers.append(180)
             return bullets
         return []
 
@@ -180,8 +181,4 @@ class Prometheus:
 
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, self.rect.center, 30)
-        for timer in self.line_timers:
-            alpha = min(255, timer * 5)
-            surface = pygame.Surface((5, 500), pygame.SRCALPHA)
-            surface.fill((255, 0, 0, alpha))
-            screen.blit(surface, (self.target_pos[0], 50))
+
