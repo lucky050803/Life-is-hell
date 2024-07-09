@@ -3,10 +3,10 @@ import sys
 import random
 import configparser
 from moviepy.editor import VideoFileClip
-from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen, credits_menu
+from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen, credits_menu,shop_menu
 from setting_menu import settings_menu
 from player import Player
-from boss import Cerberus, Prometheus
+from boss import Cerberus, Prometheus, Hades
 from item import HealthItem
 from background_text import BackgroundText
 from config import load_config, save_config
@@ -67,17 +67,26 @@ def change_background_color(timer):
     else:
         return (0, 0, 0)  # Noir
 
-def save_game(trophies, bosses_defeated, volume):
-    config['Save']['trophies'] = str(trophies)
-    config['Save']['bosses_defeated'] = ','.join(bosses_defeated)
-    config['Music']['volume'] = str(volume)
-    save_config(config)
-
 def load_game():
     trophies = config.getint('Save', 'trophies')
     bosses_defeated = config.get('Save', 'bosses_defeated').split(',')
     volume = config.getfloat('Music', 'volume')
-    return trophies, bosses_defeated, volume
+    player_stats = {
+        "damage": config.getint('Save', 'damage'),
+        "projectiles": config.getint('Save', 'projectiles'),
+        "health": config.getint('Save', 'health')
+    }
+    return trophies, bosses_defeated, volume, player_stats
+
+def save_game(trophies, bosses_defeated, volume, player_stats):
+    config['Save']['trophies'] = str(trophies)
+    config['Save']['bosses_defeated'] = ','.join(bosses_defeated)
+    config['Music']['volume'] = str(volume)
+    config['Save']['damage'] = str(player_stats['damage'])
+    config['Save']['projectiles'] = str(player_stats['projectiles'])
+    config['Save']['health'] = str(player_stats['health'])
+    save_config(config)
+
 
 def load_boss_assets(boss_name):
     boss_section = f'Boss_{boss_name}'
@@ -99,7 +108,7 @@ def show_loading_screen(screen, font):
 # Boucle principale du jeu
 def main():
     clock = pygame.time.Clock()
-    trophies, bosses_defeated, volume = load_game()
+    trophies, bosses_defeated, volume, player_stats = load_game()
     pygame.mixer.music.set_volume(volume)
 
     # Charger la vidéo de fond et réduire sa taille
@@ -126,6 +135,8 @@ def main():
                     boss = Cerberus(SCREEN_WIDTH // 2, 50)
                 elif boss_name == "Prometheus":
                     boss = Prometheus(SCREEN_WIDTH // 2, 50)
+                elif boss_name == "Hades":
+                    boss = Hades(SCREEN_WIDTH // 2, 50)
 
                 player_bullets = []
                 boss_bullets = []
@@ -232,7 +243,7 @@ def main():
                             cerberus_first_defeat = True
                         trophies += 1
                         bosses_defeated.append(boss_name)
-                        save_game(trophies, bosses_defeated, volume)
+                        save_game(trophies, bosses_defeated, volume, player_stats)
                         victory_screen(screen, video_frames, cerberus_first_defeat, font)
 
         elif choice == "settings":
@@ -242,6 +253,9 @@ def main():
             sys.exit()
         elif choice == "credits":
             credits_menu(screen, video_frames)
+        elif choice == "shop":
+            trophies, player_stats = shop_menu(screen, trophies, player_stats, video_frames, font)
 
 if __name__ == "__main__":
     main()
+
