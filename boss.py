@@ -14,7 +14,7 @@ class Cerberus:
         self.move_interval = 60  # Réduire l'intervalle de mouvement
         self.target_pos = self.get_new_position()
         self.attack_timer = 0
-        self.attack_interval = 90  # Réduire l'intervalle d'attaque
+        self.attack_interval = 120  # Réduire l'intervalle d'attaque
         self.attack_types = [self.explode, self.shoot_rebounding_bullets, self.shoot_triangle_bullets]
         self.phase_two = False
         self.dying = False
@@ -103,14 +103,14 @@ class Prometheus:
     def __init__(self, x, y):
         self.rect = pygame.Rect(x - 30, y - 30, 60, 60)
         self.health = 600
-        self.max_health = 600
+        self.max_health = 800
         self.move_timer = 0
         self.move_interval = 50
         self.target_pos = self.get_new_position()
         self.attack_timer = 0
         self.attack_interval = 100
         self.phase = 1
-        self.phase_health_thresholds = [400, 200]
+        self.phase_health_thresholds = [600, 300]
         self.dying = False
         self.fade_alpha = 255
         self.color = (255, 0, 0)
@@ -185,7 +185,7 @@ class Prometheus:
 class Hades:
     def __init__(self, x, y):
         self.rect = pygame.Rect(x - 30, y - 30, 60, 60)
-        self.health = 800
+        self.health = 4000
         self.max_health = 800
         self.move_timer = 0
         self.move_interval = 60
@@ -193,7 +193,7 @@ class Hades:
         self.attack_timer = 0
         self.attack_interval = 100
         self.phase = 1
-        self.phase_health_thresholds = [600, 400, 200]
+        self.phase_health_thresholds = [3000, 2000, 1000]
         self.dying = False
         self.fade_alpha = 255
         self.color = (255, 69, 0)  # Initial color: orange-red

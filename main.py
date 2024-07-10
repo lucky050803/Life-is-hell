@@ -194,6 +194,8 @@ def main():
                             boss_bullets.remove(bullet)
                         elif bullet.rect.left < 0 or bullet.rect.right > SCREEN_WIDTH or bullet.rect.top < 0 or bullet.rect.bottom > SCREEN_HEIGHT:
                             boss_bullets.remove(bullet)
+                        if bullet.update()==False:
+                            boss_bullets.remove(bullet)
 
                     # Mettre à jour les objets de soin
                     for item in health_items[:]:
@@ -233,7 +235,7 @@ def main():
                     draw_text_bottom_right(screen, f"HP: {player.health}", font, WHITE, 10, 10)
 
                     # Afficher le texte des trophées
-                    draw_trophies(screen, trophies, font)
+                    #draw_trophies(screen, trophies, font)
 
                     pygame.display.flip()
                     clock.tick(FPS)

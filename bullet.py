@@ -9,7 +9,7 @@ SCREEN_WIDTH = config.getint('Screen', 'width')
 SCREEN_HEIGHT = config.getint('Screen', 'height')
 
 class Bullet:
-    def __init__(self, start_pos, target_pos, speed=10, color=(255, 255, 255)):
+    def __init__(self, start_pos, target_pos, speed=5, color=(255, 255, 255)):
         self.image = pygame.Surface((10, 10))
         self.image.fill(color)
         self.rect = self.image.get_rect(center=start_pos)
@@ -89,7 +89,7 @@ class TriangleBullet(Bullet):
         self.image = pygame.Surface((20, 20), pygame.SRCALPHA)
         pygame.draw.polygon(self.image, color, [(10, 0), (0, 20), (20, 20)])  # Dessiner un triangle
         self.rect = self.image.get_rect(center=start_pos)
-        self.speed = 5
+        self.speed = 30
         self.velocity = self.calculate_velocity(start_pos, target_pos)
         self.returning = False
         self.start_pos = start_pos
