@@ -1,7 +1,7 @@
 import pygame
 import random
 import math
-from bullet import Bullet, ReboundingBullet, TriangleBullet
+from bullet import *
 from bullet import Bullet, ExplodingBullet, DamageLineBullet
 class Cerberus:
     def __init__(self, x, y):
@@ -188,7 +188,7 @@ class Hades:
         self.health = 800
         self.max_health = 800
         self.move_timer = 0
-        self.move_interval = 40
+        self.move_interval = 60
         self.target_pos = self.get_new_position()
         self.attack_timer = 0
         self.attack_interval = 100
@@ -312,7 +312,6 @@ class Hades:
 
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, self.rect.center, 30)
-
 
 class DamageCircle:
     def __init__(self, pos, radius, duration):

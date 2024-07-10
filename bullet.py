@@ -107,3 +107,4 @@ class TriangleBullet(Bullet):
             if self.rect.colliderect(pygame.Rect(self.start_pos[0] - 5, self.start_pos[1] - 5, 10, 10)):
                 self.rect.center = self.start_pos
                 self.velocity = (0, 0)
+

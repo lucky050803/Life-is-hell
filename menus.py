@@ -16,7 +16,11 @@ def draw_text_centered(screen, text, font, color, x, y):
     text_rect.center = (x, y)
     screen.blit(text_surface, text_rect)
 
-def main_menu(screen, video_frames):
+def draw_trophies(screen, trophies, font):
+    text_surface, _ = font.render(f"Trophies: {trophies}", (255, 255, 255))
+    screen.blit(text_surface, (screen.get_width() - text_surface.get_width() - 10, 10))
+
+def main_menu(screen, video_frames, trophies):
     button_font = pygame.freetype.Font(font_path, font_size)
 
     button_texts = ["Play", "Settings", "Credits", "Shop", "Quit"]
@@ -40,7 +44,7 @@ def main_menu(screen, video_frames):
         frame_index += 1
 
         draw_text_centered(screen, "", font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2 - 100)
-        
+        draw_trophies(screen, trophies, font)
         for i, rect in enumerate(button_rects):
             pygame.draw.rect(screen, (0, 255, 255), rect)
             draw_text_centered(screen, button_texts[i], button_font, (0, 0, 0), rect.centerx, rect.centery)
@@ -57,7 +61,7 @@ def boss_selection_menu(screen, trophies, bosses_defeated, video_frames, font):
         boss_options.append("Prometheus")
     if "Prometheus" in bosses_defeated:
         boss_options.append("Hades")
-
+    
     dropdown_active = False
     dropdown_rect = pygame.Rect(200, 150, 200, 50)
     option_rects = [pygame.Rect(200, 200 + 50 * i, 200, 50) for i in range(len(boss_options))]
@@ -96,7 +100,7 @@ def boss_selection_menu(screen, trophies, bosses_defeated, video_frames, font):
         pygame.draw.rect(screen, (0, 0, 0), back_button_rect)
         text_surface = font.render("Back", True, (255, 255, 255))
         screen.blit(text_surface, (back_button_rect.x + 10, back_button_rect.y + 10))
-
+        #draw_trophies(screen, trophies, font)
         pygame.display.flip()
         clock.tick(30)
 
@@ -213,7 +217,7 @@ def victory_screen(screen, video_frames, cerberus_first_defeat=False, prometheus
 def shop_menu(screen, trophies, player_stats, video_frames, font):
     button_font = pygame.freetype.Font(font_path, font_size)
     upgrades = ["Damage", "Projectiles", "Health"]
-    upgrade_costs = [1, 2, 3]  # Coût des améliorations (exemple)
+    upgrade_costs = [1, 1, 1]  # Coût des améliorations (exemple)
 
     upgrade_rects = [pygame.Rect(0, 0, 300, 50) for _ in upgrades]
     for i, rect in enumerate(upgrade_rects):
@@ -239,7 +243,7 @@ def shop_menu(screen, trophies, player_stats, video_frames, font):
 
         screen.blit(video_frames[frame_index % len(video_frames)], (0, 0))
         frame_index += 1
-
+        #draw_trophies(screen, trophies, font)
         draw_text_centered(screen, "Shop", button_font, (0, 255, 255), screen.get_width() // 2, screen.get_height() // 2 - 200)
 
         for i, rect in enumerate(upgrade_rects):

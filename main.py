@@ -3,7 +3,7 @@ import sys
 import random
 import configparser
 from moviepy.editor import VideoFileClip
-from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen, credits_menu,shop_menu
+from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen, credits_menu, shop_menu
 from setting_menu import settings_menu
 from player import Player
 from boss import Cerberus, Prometheus, Hades
@@ -54,6 +54,10 @@ def draw_text_bottom_right(screen, text, font, color, x_offset, y_offset):
     text_rect.bottomright = (SCREEN_WIDTH - x_offset, SCREEN_HEIGHT - y_offset)
     screen.blit(text_surface, text_rect.topleft)
 
+def draw_trophies(screen, trophies, font):
+    text_surface, _ = font.render(f"Trophies: {trophies}", (255, 255, 255))
+    screen.blit(text_surface, (screen.get_width() - text_surface.get_width() - 10, 10))
+
 def change_background_color(timer):
     if timer % 120 < 10:  # Flashe entre bleu, rouge et vert
         if timer % 30 < 10:
@@ -71,22 +75,27 @@ def load_game():
     trophies = config.getint('Save', 'trophies')
     bosses_defeated = config.get('Save', 'bosses_defeated').split(',')
     volume = config.getfloat('Music', 'volume')
+
     player_stats = {
-        "damage": config.getint('Save', 'damage'),
-        "projectiles": config.getint('Save', 'projectiles'),
-        "health": config.getint('Save', 'health')
+        'health': config.getint('Player', 'health', fallback=0),
+        'damage': config.getint('Player', 'damage', fallback=0),
+        'projectiles': config.getint('Player', 'projectiles', fallback=0),
     }
+    
     return trophies, bosses_defeated, volume, player_stats
 
 def save_game(trophies, bosses_defeated, volume, player_stats):
     config['Save']['trophies'] = str(trophies)
     config['Save']['bosses_defeated'] = ','.join(bosses_defeated)
     config['Music']['volume'] = str(volume)
-    config['Save']['damage'] = str(player_stats['damage'])
-    config['Save']['projectiles'] = str(player_stats['projectiles'])
-    config['Save']['health'] = str(player_stats['health'])
-    save_config(config)
 
+    config['Player'] = {
+        'health': str(player_stats['health']),
+        'damage': str(player_stats['damage']),
+        'projectiles': str(player_stats['projectiles']),
+    }
+
+    save_config(config)
 
 def load_boss_assets(boss_name):
     boss_section = f'Boss_{boss_name}'
@@ -119,7 +128,7 @@ def main():
     while True:
         pygame.mixer.music.load(menu_music_path)
         pygame.mixer.music.play(-1)
-        choice = main_menu(screen, video_frames)
+        choice = main_menu(screen, video_frames, trophies)
         if choice == "play":
             boss_name = boss_selection_menu(screen, trophies, bosses_defeated, video_frames, font)
             if boss_name:
@@ -130,7 +139,7 @@ def main():
                 pygame.mixer.music.play(-1)
 
                 # Initialisation du joueur, du boss et des objets de soin
-                player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50)
+                player = Player(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 50, player_stats)
                 if boss_name == "Cerberus":
                     boss = Cerberus(SCREEN_WIDTH // 2, 50)
                 elif boss_name == "Prometheus":
@@ -158,7 +167,7 @@ def main():
                             sys.exit()
                         if event.type == pygame.MOUSEBUTTONDOWN:
                             if event.button == 1:
-                                player_bullets.append(player.shoot(pygame.mouse.get_pos()))
+                                player_bullets.extend(player.shoot(pygame.mouse.get_pos()))
 
                     keys = pygame.key.get_pressed()
                     player.update(keys)
@@ -167,7 +176,7 @@ def main():
                     for bullet in player_bullets[:]:
                         bullet.update()
                         if bullet.rect.colliderect(boss.rect):
-                            boss.health -= 10
+                            boss.health -= player.damage
                             player_bullets.remove(bullet)
                         elif bullet.rect.left < 0 or bullet.rect.right > SCREEN_WIDTH or bullet.rect.top < 0 or bullet.rect.bottom > SCREEN_HEIGHT:
                             player_bullets.remove(bullet)
@@ -224,7 +233,7 @@ def main():
                     draw_text_bottom_right(screen, f"HP: {player.health}", font, WHITE, 10, 10)
 
                     # Afficher le texte des trophées
-                    draw_text(screen, f"Trophies: {trophies}", font, WHITE, 10, SCREEN_HEIGHT - 30)
+                    draw_trophies(screen, trophies, font)
 
                     pygame.display.flip()
                     clock.tick(FPS)
@@ -239,12 +248,11 @@ def main():
                         pygame.display.flip()
                         pygame.time.wait(2000)  # Attendre que l'animation de mort se termine
                         game_active = False
-                        if boss_name == "Cerberus" and boss_name not in bosses_defeated:
-                            cerberus_first_defeat = True
-                        trophies += 1
-                        bosses_defeated.append(boss_name)
+                        if boss_name not in bosses_defeated:
+                            trophies += 1
+                            bosses_defeated.append(boss_name)
                         save_game(trophies, bosses_defeated, volume, player_stats)
-                        victory_screen(screen, video_frames, cerberus_first_defeat, font)
+                        victory_screen(screen, video_frames, boss_name == "Cerberus" and boss_name not in bosses_defeated, font)
 
         elif choice == "settings":
             volume = settings_menu(screen, volume, video_frames)
@@ -258,4 +266,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
