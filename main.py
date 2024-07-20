@@ -258,6 +258,7 @@ def main():
 
         elif choice == "settings":
             volume = settings_menu(screen, volume, video_frames)
+            save_game(trophies, bosses_defeated, volume, player_stats)
         elif choice == "quit":
             pygame.quit()
             sys.exit()
