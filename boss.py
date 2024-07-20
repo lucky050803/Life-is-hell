@@ -3,6 +3,7 @@ import random
 import math
 from bullet import *
 from bullet import Bullet, ExplodingBullet, DamageLineBullet
+
 class Cerberus:
     def __init__(self, x, y):
         self.image = pygame.Surface((60, 60), pygame.SRCALPHA)  # Réduire la taille de Cerberus
@@ -96,8 +97,6 @@ class Cerberus:
 
     def draw(self, screen):
         screen.blit(self.image, self.rect.topleft)
-
-
 
 class Prometheus:
     def __init__(self, x, y):
@@ -329,13 +328,11 @@ class DamageCircle:
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, self.rect.center, self.radius)
 
-
 class HomingBullet(Bullet):
     def update(self, player_pos):
         angle = math.atan2(player_pos[1] - self.rect.centery, player_pos[0] - self.rect.centerx)
         self.velocity = self.speed * math.cos(angle), self.speed * math.sin(angle)
         super().update()
-
 
 class SlowingZone:
     def __init__(self, pos, radius, duration):
@@ -353,7 +350,6 @@ class SlowingZone:
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, self.rect.center, self.radius)
 
-
 class LavaGeyser:
     def __init__(self, pos, duration):
         self.rect = pygame.Rect(pos[0] - 15, pos[1] - 15, 30, 30)
@@ -368,7 +364,6 @@ class LavaGeyser:
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, self.rect)
-
 
 class PersistentLavaZone:
     def __init__(self, pos, size, duration):
@@ -385,7 +380,6 @@ class PersistentLavaZone:
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, self.rect)
 
-
 class MovingFireLine(DamageLineBullet):
     def __init__(self, start_pos, end_pos, duration):
         super().__init__(start_pos, end_pos, duration)
@@ -401,3 +395,90 @@ class MovingFireLine(DamageLineBullet):
         self.rect.y += self.velocity[1]
         return super().update()
 
+class Charon:
+    def __init__(self, x, y):
+        self.rect = pygame.Rect(x - 30, y - 30, 60, 60)
+        self.health = 1000
+        self.max_health = 1000
+        self.move_timer = 0
+        self.move_interval = 50
+        self.target_pos = self.get_new_position()
+        self.attack_timer = 0
+        self.attack_interval = 100
+        self.phase = 1
+        self.phase_health_thresholds = [750, 500, 250]
+        self.dying = False
+        self.fade_alpha = 255
+        self.color = (128, 0, 128)  # Initial color: purple
+        self.attack_types = [self.phase_one_attack, self.phase_two_attack, self.phase_three_attack, self.phase_four_attack]
+
+    def get_new_position(self):
+        return random.randint(50, 550), random.randint(50, 550)
+
+    def phase_one_attack(self):
+        bullets = []
+        for _ in range(8):
+            target_pos = self.get_new_position()
+            bullets.append(BossBullet(self.rect.centerx, self.rect.centery))
+        return bullets
+
+    def phase_two_attack(self):
+        bullets = []
+        for angle in range(0, 360, 45):
+            target_x = self.rect.centerx + 150 * math.cos(math.radians(angle))
+            target_y = self.rect.centery + 150 * math.sin(math.radians(angle))
+            bullets.append(Bullet(self.rect.center, (target_x, target_y), color=(255, 255, 0)))
+        return bullets
+
+    def phase_three_attack(self):
+        bullets = []
+        for angle in range(0, 360, 30):
+            target_x = self.rect.centerx + 200 * math.cos(math.radians(angle))
+            target_y = self.rect.centery + 200 * math.sin(math.radians(angle))
+            bullets.append(ExplodingBullet(self.rect.center, (target_x, target_y)))
+        return bullets
+
+    def phase_four_attack(self):
+        bullets = []
+        for angle in range(0, 360, 15):
+            target_x = self.rect.centerx + 250 * math.cos(math.radians(angle))
+            target_y = self.rect.centery + 250 * math.sin(math.radians(angle))
+            bullets.append(DamageLineBullet(self.rect.center, (target_x, target_y), 180))
+        return bullets
+
+    def start_dying(self):
+        self.dying = True
+
+    def update(self):
+        if self.dying:
+            self.fade_alpha -= 5
+            if self.fade_alpha < 0:
+                self.fade_alpha = 0
+            return []
+
+        self.move_timer += 1
+        self.attack_timer += 1
+
+        if self.phase < 4 and self.health <= self.phase_health_thresholds[self.phase - 1] and self.health > 0:
+            self.phase += 1
+            self.attack_interval -= 10  # Increase attack frequency
+            self.color = (255 // self.phase, 0, 255 // self.phase)  # Change color at each phase
+
+        if self.move_timer >= self.move_interval:
+            self.move_timer = 0
+            self.target_pos = self.get_new_position()
+
+        if self.rect.center != self.target_pos:
+            self.rect = self.rect.move(
+                (self.target_pos[0] - self.rect.centerx) // self.move_interval,
+                (self.target_pos[1] - self.rect.centery) // self.move_interval
+            )
+
+        if self.attack_timer >= self.attack_interval:
+            self.attack_timer = 0
+            return self.attack_types[self.phase - 1]()
+
+        return []
+
+    def draw(self, screen):
+        pygame.draw.circle(screen, self.color, self.rect.center, 30)

@@ -6,13 +6,18 @@ from moviepy.editor import VideoFileClip
 from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen, credits_menu, shop_menu
 from setting_menu import settings_menu
 from player import Player
-from boss import Cerberus, Prometheus, Hades   
+from boss import Hades, Cerberus, Prometheus, Charon
 from item import HealthItem
 from background_text import BackgroundText
 from config import load_config, save_config
+from bossscreen import *
+
 
 # Initialisation de Pygame
 pygame.init()
+
+
+
 
 # Charger la configuration
 config = load_config()
@@ -32,7 +37,7 @@ BLUE = tuple(map(int, config.get('Colors', 'blue').split(',')))
 video_path = config['Paths']['menu_background']
 font_path = config['Paths']['font']
 menu_music_path = config['Music']['menu_music']
-volume = config.getfloat('Music', 'volume')
+volume = float(config['Music']['volume'])
 
 # Initialisation du module de mixage
 pygame.mixer.init()
@@ -132,6 +137,15 @@ def main():
         if choice == "play":
             boss_name = boss_selection_menu(screen, trophies, bosses_defeated, video_frames, font)
             if boss_name:
+                if boss_name == "Charon":
+                    Charon_intermediate_screen(screen, clock, font)
+                elif boss_name == "Hades":
+                    Hades_intermediate_screen(screen, clock, font)
+                elif boss_name == "Prometheus":
+                    Prom_intermediate_screen(screen, clock, font)
+                elif boss_name == "Cerberus":
+                    Cerb_intermediate_screen(screen, clock, font)
+
                 show_loading_screen(screen, font)
                 pygame.time.wait(2000)  # Temps d'attente simulé pour le chargement
                 boss_video_frames, boss_music_path = load_boss_assets(boss_name)
@@ -146,6 +160,8 @@ def main():
                     boss = Prometheus(SCREEN_WIDTH // 2, 50)
                 elif boss_name == "Hades":
                     boss = Hades(SCREEN_WIDTH // 2, 50)
+                elif boss_name == "Charon":
+                    boss = Charon(SCREEN_WIDTH // 2, 50)  # Add Charon initialization
 
                 player_bullets = []
                 boss_bullets = []
@@ -159,7 +175,6 @@ def main():
 
                 # Boucle de jeu principale
                 game_active = True
-                cerberus_first_defeat = False
                 while game_active:
                     for event in pygame.event.get():
                         if event.type == pygame.QUIT:
@@ -204,16 +219,7 @@ def main():
                             health_items.remove(item)
 
                     # Mettre à jour la couleur de fond
-                    background_color = change_background_color(timer)
                     timer += 1
-
-                    # Mettre à jour et dessiner le texte de fond dynamique
-                    for text in background_texts[:]:
-                        text.update()
-                        if text.is_faded():
-                            background_texts.remove(text)
-                            background_texts.append(BackgroundText(SCREEN_WIDTH, SCREEN_HEIGHT, font_path))
-                        text.draw(screen)
 
                     # Afficher la vidéo de fond
                     frame = boss_video_frames[timer % len(boss_video_frames)]
@@ -258,7 +264,6 @@ def main():
 
         elif choice == "settings":
             volume = settings_menu(screen, volume, video_frames)
-            save_game(trophies, bosses_defeated, volume, player_stats)
         elif choice == "quit":
             pygame.quit()
             sys.exit()

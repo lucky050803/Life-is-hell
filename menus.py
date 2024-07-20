@@ -2,6 +2,7 @@ import pygame
 import pygame.freetype
 from config import load_config
 import sys 
+import time
 
 config = load_config()
 font_path = config['Paths']['font']
@@ -51,7 +52,6 @@ def main_menu(screen, video_frames, trophies):
 
         pygame.display.flip()
 
-
 def boss_selection_menu(screen, trophies, bosses_defeated, video_frames, font):
     clock = pygame.time.Clock()
     selected_boss = None
@@ -61,6 +61,8 @@ def boss_selection_menu(screen, trophies, bosses_defeated, video_frames, font):
         boss_options.append("Prometheus")
     if "Prometheus" in bosses_defeated:
         boss_options.append("Hades")
+    if "Hades" in bosses_defeated:
+        boss_options.append("Charon")
     
     dropdown_active = False
     dropdown_rect = pygame.Rect(200, 150, 200, 50)
@@ -107,12 +109,6 @@ def boss_selection_menu(screen, trophies, bosses_defeated, video_frames, font):
         if selected_boss:
             return selected_boss
 
-
-
-
-
-
-
 def game_over_screen(screen, video_frames):
     button_font = pygame.freetype.Font(font_path, font_size)
 
@@ -139,7 +135,6 @@ def game_over_screen(screen, video_frames):
         draw_text_centered(screen, button_text, button_font, (0, 0, 0), button_rect.centerx, button_rect.centery)
 
         pygame.display.flip()
-        
         
 def credits_menu(screen, video_frames):
     button_font = pygame.freetype.Font(font_path, font_size)
@@ -171,8 +166,7 @@ def credits_menu(screen, video_frames):
         
         pygame.display.flip()
 
-
-def victory_screen(screen, video_frames, cerberus_first_defeat=False, prometheus_first_defeat=False, font=None):
+def victory_screen(screen, video_frames, cerberus_first_defeat=False, prometheus_first_defeat=False,hades_first_defeat=False, font=None):
     clock = pygame.time.Clock()
     if not font:
         font = pygame.font.Font(None, 48)
@@ -210,14 +204,21 @@ def victory_screen(screen, video_frames, cerberus_first_defeat=False, prometheus
             unlock_surface.set_alpha(int(timer * alpha_step))
             screen.blit(unlock_surface, unlock_rect)
 
+        if hades_first_defeat:
+            unlock_text = "Charon Unlocked!"
+            unlock_surface = font.render(unlock_text, True, (255, 255, 0))
+            unlock_rect = unlock_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100))
+            unlock_surface.set_alpha(int(timer * alpha_step))
+            screen.blit(unlock_surface, unlock_rect)
+            
         pygame.display.flip()
         clock.tick(60)
         timer += 1
 
 def shop_menu(screen, trophies, player_stats, video_frames, font):
     button_font = pygame.freetype.Font(font_path, font_size)
-    upgrades = ["Damage", "Projectiles", "Health"]
-    upgrade_costs = [1, 1, 1]  # Coût des améliorations (exemple)
+    upgrades = ["Damage", "Health"]
+    upgrade_costs = [1, 1]  # Coût des améliorations (exemple)
 
     upgrade_rects = [pygame.Rect(0, 0, 300, 50) for _ in upgrades]
     for i, rect in enumerate(upgrade_rects):
