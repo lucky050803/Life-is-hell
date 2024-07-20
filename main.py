@@ -6,7 +6,7 @@ from moviepy.editor import VideoFileClip
 from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen, credits_menu, shop_menu
 from setting_menu import settings_menu
 from player import Player
-from boss import Cerberus, Prometheus, Hades
+from boss import Cerberus, Prometheus, Hades   
 from item import HealthItem
 from background_text import BackgroundText
 from config import load_config, save_config
