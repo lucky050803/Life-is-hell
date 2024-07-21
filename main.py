@@ -262,8 +262,10 @@ def main():
                         save_game(trophies, bosses_defeated, volume, player_stats)
                         victory_screen(screen, video_frames, boss_name == "Cerberus" and boss_name not in bosses_defeated, font)
 
-        elif choice == "settings":
+        if choice == "settings":
             volume = settings_menu(screen, volume, video_frames)
+            config['Music']['volume'] = str(volume)  # Mettre à jour le volume dans la config
+            save_config(config)
         elif choice == "quit":
             pygame.quit()
             sys.exit()
