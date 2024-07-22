@@ -6,7 +6,7 @@ from moviepy.editor import VideoFileClip
 from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen, credits_menu, shop_menu
 from setting_menu import settings_menu
 from player import Player
-from boss import Hades, Cerberus, Prometheus, Charon
+from boss import Hades, Cerberus, Prometheus, Charon, Thanatos
 from item import HealthItem
 from background_text import BackgroundText
 from config import load_config, save_config
@@ -145,7 +145,9 @@ def main():
                     Prom_intermediate_screen(screen, clock, font)
                 elif boss_name == "Cerberus":
                     Cerb_intermediate_screen(screen, clock, font)
-
+                elif boss_name == "Thanatos":
+                    Thanatos_intermediate_screen(screen, clock, font)  # Ajouter un écran intermédiaire pour Thanatos
+                    
                 show_loading_screen(screen, font)
                 pygame.time.wait(2000)  # Temps d'attente simulé pour le chargement
                 boss_video_frames, boss_music_path = load_boss_assets(boss_name)
@@ -162,6 +164,10 @@ def main():
                     boss = Hades(SCREEN_WIDTH // 2, 50)
                 elif boss_name == "Charon":
                     boss = Charon(SCREEN_WIDTH // 2, 50)  # Add Charon initialization
+                elif boss_name == "Thanatos":
+                    boss = Thanatos(SCREEN_WIDTH // 2, 50)  # Initialisation de Thanatos
+
+
 
                 player_bullets = []
                 boss_bullets = []

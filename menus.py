@@ -63,6 +63,8 @@ def boss_selection_menu(screen, trophies, bosses_defeated, video_frames, font):
         boss_options.append("Hades")
     if "Hades" in bosses_defeated:
         boss_options.append("Charon")
+    if "Charon" in bosses_defeated:
+        boss_options.append("Thanatos")  # Ajoutez Thanatos ici
     
     dropdown_active = False
     dropdown_rect = pygame.Rect(200, 150, 200, 50)

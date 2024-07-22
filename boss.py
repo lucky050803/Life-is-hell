@@ -482,5 +482,123 @@ class Charon:
 
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, self.rect.center, 30)
-        
-        
+
+
+import pygame
+import random
+import math
+from bullet import Bullet, ExplodingBullet, DamageLineBullet, BossBullet
+
+class Thanatos:
+    def __init__(self, x, y):
+        self.rect = pygame.Rect(x - 30, y - 30, 60, 60)
+        self.health = 1200
+        self.max_health = 1200
+        self.move_timer = 0
+        self.move_interval = 50
+        self.target_pos = self.get_new_position()
+        self.attack_timer = 0
+        self.attack_interval = 80
+        self.phase = 1
+        self.phase_health_thresholds = [900, 600, 300]
+        self.dying = False
+        self.fade_alpha = 255
+        self.color = (255, 0, 0)  # Initial color: red
+        self.attack_types = [self.phase_one_attack, self.phase_two_attack, self.phase_three_attack, self.phase_four_attack]
+        self.split = False  # Indicates if Thanatos is split
+        self.split_parts = []
+
+        self.ring_size = 50  # Initial size of the bullet ring
+        self.bullet_ring = self.create_bullet_ring()
+
+    def create_bullet_ring(self):
+        bullets = []
+        for angle in range(0, 360, 30):
+            rad = math.radians(angle)
+            x = self.rect.centerx + self.ring_size * math.cos(rad)
+            y = self.rect.centery + self.ring_size * math.sin(rad)
+            bullets.append(Bullet((x, y), (self.rect.centerx, self.rect.centery), speed=0))
+        return bullets
+
+    def update_bullet_ring(self):
+        for i, bullet in enumerate(self.bullet_ring):
+            angle = (pygame.time.get_ticks() / 10 + i * 30) % 360
+            rad = math.radians(angle)
+            bullet.rect.centerx = self.rect.centerx + self.ring_size * math.cos(rad)
+            bullet.rect.centery = self.rect.centery + self.ring_size * math.sin(rad)
+
+    def get_new_position(self):
+        return random.randint(50, 550), random.randint(50, 550)
+
+    def phase_one_attack(self):
+        bullets = []
+        for angle in range(0, 360, 45):
+            target_x = self.rect.centerx + 100 * math.cos(math.radians(angle))
+            target_y = self.rect.centery + 100 * math.sin(math.radians(angle))
+            bullets.append(BossBullet(self.rect.centerx, self.rect.centery))
+        return bullets
+
+    def phase_two_attack(self):
+        bullets = []
+        for angle in range(0, 360, 30):
+            target_x = self.rect.centerx + 150 * math.cos(math.radians(angle))
+            target_y = self.rect.centery + 150 * math.sin(math.radians(angle))
+            bullets.append(Bullet(self.rect.center, (target_x, target_y), color=(0, 255, 255)))
+        return bullets
+
+    def phase_three_attack(self):
+        bullets = []
+        for angle in range(0, 360, 20):
+            target_x = self.rect.centerx + 200 * math.cos(math.radians(angle))
+            target_y = self.rect.centery + 200 * math.sin(math.radians(angle))
+            bullets.append(ExplodingBullet(self.rect.center, (target_x, target_y)))
+        return bullets
+
+    def phase_four_attack(self):
+        bullets = []
+        for angle in range(0, 360, 15):
+            target_x = self.rect.centerx + 250 * math.cos(math.radians(angle))
+            target_y = self.rect.centery + 250 * math.sin(math.radians(angle))
+            bullets.append(DamageLineBullet(self.rect.center, (target_x, target_y), 180))
+        return bullets
+
+    def start_dying(self):
+        self.dying = True
+
+    def update(self):
+        if self.dying:
+            self.fade_alpha -= 5
+            if self.fade_alpha < 0:
+                self.fade_alpha = 0
+            return []
+
+        self.move_timer += 1
+        self.attack_timer += 1
+
+        if self.phase < 4 and self.health <= self.phase_health_thresholds[self.phase - 1] and self.health > 0:
+            self.phase += 1
+            self.attack_interval -= 10  # Increase attack frequency
+            self.ring_size += 50  # Increase the size of the bullet ring
+            self.color = (255 // self.phase, 0, 255 // self.phase)  # Change color at each phase
+
+        if self.move_timer >= self.move_interval:
+            self.move_timer = 0
+            self.target_pos = self.get_new_position()
+
+        if self.rect.center != self.target_pos:
+            self.rect = self.rect.move(
+                (self.target_pos[0] - self.rect.centerx) // self.move_interval,
+                (self.target_pos[1] - self.rect.centery) // self.move_interval
+            )
+
+        if self.attack_timer >= self.attack_interval:
+            self.attack_timer = 0
+            return self.attack_types[self.phase - 1]()
+
+        self.update_bullet_ring()
+        return []
+
+    def draw(self, screen):
+        pygame.draw.circle(screen, self.color, self.rect.center, 30)
+        for bullet in self.bullet_ring:
+            bullet.draw(screen)
