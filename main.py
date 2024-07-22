@@ -44,7 +44,7 @@ pygame.mixer.music.set_volume(volume)
 
 # Création de la fenêtre de jeu
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Bullet Hell Game")
+pygame.display.set_caption("Life Is Hell")
 
 font = pygame.font.Font(font_path, 24)
 
