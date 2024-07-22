@@ -8,7 +8,6 @@ from setting_menu import settings_menu
 from player import Player
 from boss import Hades, Cerberus, Prometheus, Charon, Thanatos
 from item import HealthItem
-from background_text import BackgroundText
 from config import load_config, save_config
 from bossscreen import *
 
@@ -176,8 +175,8 @@ def main():
                 # Variables pour le changement de couleur de fond
                 timer = 0
 
-                # Liste pour le texte de fond dynamique
-                background_texts = [BackgroundText(SCREEN_WIDTH, SCREEN_HEIGHT, font_path) for _ in range(3)]
+                
+                
 
                 # Boucle de jeu principale
                 game_active = True
