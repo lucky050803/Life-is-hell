@@ -279,5 +279,5 @@ def main():
         elif choice == "shop":
             trophies, player_stats = shop_menu(screen, trophies, player_stats, video_frames, font)
 
-if __name__ == "__main__":
-    main()
+
+main()
