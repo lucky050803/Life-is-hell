@@ -168,7 +168,7 @@ def Thanatos_intermediate_screen(screen, clock, font) :
     pygame.mixer.music.play(-1)  # -1 pour jouer en boucle
 
     # Définir le texte
-    text = "YOU ARE NOTHING... BUT A MISTAKE"
+    text = "YOU ARE NOTHING... BUT A MISTAKE !"
     text_surface = font.render(text, True, (0, 255, 255))  # Blanc
     text_rect = text_surface.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
 
