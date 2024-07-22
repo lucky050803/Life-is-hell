@@ -482,3 +482,5 @@ class Charon:
 
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, self.rect.center, 30)
+        
+        
