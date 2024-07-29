@@ -15,7 +15,7 @@ class Cerberus:
         self.move_interval = 60  # Réduire l'intervalle de mouvement
         self.target_pos = self.get_new_position()
         self.attack_timer = 0
-        self.attack_interval = 120  # Réduire l'intervalle d'attaque
+        self.attack_interval = 140  # Réduire l'intervalle d'attaque
         self.attack_types = [self.explode, self.shoot_rebounding_bullets, self.shoot_triangle_bullets]
         self.phase_two = False
         self.dying = False
