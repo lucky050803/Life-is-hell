@@ -97,7 +97,10 @@ def boss_selection_menu(screen, trophies, bosses_defeated, video_frames, font):
         if dropdown_active:
             for i, rect in enumerate(option_rects):
                 pygame.draw.rect(screen, (0, 0, 0), rect)
-                text_surface = font.render(boss_options[i], True, (255, 255, 255))
+                if boss_options[i] == "Thanatos":
+                    text_surface = font.render(boss_options[i], True, (0, 0, 255))
+                else: 
+                    text_surface = font.render(boss_options[i], True, (255, 255, 255))
                 screen.blit(text_surface, (rect.x + 10, rect.y + 10))
 
         # Dessiner le bouton "Retour"
@@ -132,7 +135,7 @@ def game_over_screen(screen, video_frames):
         screen.blit(video_frames[frame_index % len(video_frames)], (0, 0))
         frame_index += 1
         
-        draw_text_centered(screen, "Game Over", font, (255, 0, 0), screen.get_width() // 2, screen.get_height() // 2 - 50)
+        draw_text_centered(screen, "Game Over", font, (0, 0, 255), screen.get_width() // 2, screen.get_height() // 2 - 50)
         pygame.draw.rect(screen, (0, 255, 255), button_rect)
         draw_text_centered(screen, button_text, button_font, (0, 0, 0), button_rect.centerx, button_rect.centery)
 
@@ -265,5 +268,42 @@ def shop_menu(screen, trophies, player_stats, video_frames, font):
         pygame.draw.rect(screen, (0, 0, 0), back_button_rect)
         text_surface = font.render("Back", True, (255, 255, 255))
         screen.blit(text_surface, (back_button_rect.x + 10, back_button_rect.y + 10))
+
+        pygame.display.flip()
+
+def continue_menu(soul, screen, video_frames):
+    button_font = pygame.freetype.Font(font_path, font_size)
+
+    button_text = "No"
+    button_rect = pygame.Rect(0, 0, 300, 50)
+    button_rect.center = (screen.get_width() // 2, screen.get_height() // 2 + 100)
+    
+    button_text_retry = "Yes (remaining souls :" + str(soul) + ")"
+    button_rect_retry = pygame.Rect(0, 0, 300, 50)
+    button_rect_retry.center = (screen.get_width() // 2, screen.get_height() // 2)
+
+    running = True
+    frame_index = 0
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_rect.collidepoint(event.pos):
+                    return False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_rect_retry.collidepoint(event.pos):
+                    return True
+
+        screen.blit(video_frames[frame_index % len(video_frames)], (0, 0))
+        frame_index += 1
+        
+        draw_text_centered(screen, "Consume a soul to continue ?", font, (0, 0, 255), screen.get_width() // 2, screen.get_height() // 2 - 50)
+        pygame.draw.rect(screen, (0, 255, 255), button_rect)
+        draw_text_centered(screen, button_text, button_font, (0, 0, 0), button_rect.centerx, button_rect.centery)
+        
+        pygame.draw.rect(screen, (0, 255, 255), button_rect_retry)
+        draw_text_centered(screen, button_text_retry, button_font, (0, 0, 0), button_rect_retry.centerx, button_rect_retry.centery)
 
         pygame.display.flip()

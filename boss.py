@@ -2,7 +2,7 @@ import pygame
 import random
 import math
 from bullet import *
-
+from bossscreen import *
 
 class Cerberus:
     def __init__(self, x, y):
@@ -323,8 +323,8 @@ class DamageCircle:
 class Thanatos:
     def __init__(self, x, y):
         self.rect = pygame.Rect(x - 30, y - 30, 60, 60)
-        self.health = 1200
-        self.max_health = 1200
+        self.health = 1
+        self.max_health = 1
         self.move_timer = 0
         self.move_interval = 35
         self.target_pos = self.get_new_position()

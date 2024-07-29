@@ -3,7 +3,7 @@ import sys
 import random
 import configparser
 from moviepy.editor import VideoFileClip
-from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen, credits_menu, shop_menu
+from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen, credits_menu, shop_menu,continue_menu
 from setting_menu import settings_menu
 from player import Player
 from boss import Hades, Cerberus, Prometheus, Thanatos, TheSisters
@@ -34,6 +34,7 @@ BLUE = tuple(map(int, config.get('Colors', 'blue').split(',')))
 
 # Chemins des fichiers
 video_path = config['Paths']['menu_background']
+video_pathThanatDefeat = config['Paths']['menu_background_thanat']
 font_path = config['Paths']['font']
 menu_music_path = config['Music']['menu_music']
 volume = float(config['Music']['volume'])
@@ -81,6 +82,7 @@ def load_game():
     trophies = config.getint('Save', 'trophies')
     bosses_defeated = config.get('Save', 'bosses_defeated').split(',')
     volume = config.getfloat('Music', 'volume')
+    soul = config.getint('Save', 'soul')
 
     player_stats = {
         'health': config.getint('Player', 'health', fallback=0),
@@ -88,12 +90,13 @@ def load_game():
         'projectiles': config.getint('Player', 'projectiles', fallback=0),
     }
     
-    return trophies, bosses_defeated, volume, player_stats
+    return trophies, bosses_defeated, volume, player_stats, soul
 
-def save_game(trophies, bosses_defeated, volume, player_stats):
+def save_game(trophies, bosses_defeated, volume, player_stats,soul):
     config['Save']['trophies'] = str(trophies)
     config['Save']['bosses_defeated'] = ','.join(bosses_defeated)
     config['Music']['volume'] = str(volume)
+    config['Save']['soul'] = str(soul)
 
     config['Player'] = {
         'health': str(player_stats['health']),
@@ -123,11 +126,14 @@ def show_loading_screen(screen, font):
 # Boucle principale du jeu
 def main():
     clock = pygame.time.Clock()
-    trophies, bosses_defeated, volume, player_stats = load_game()
+    trophies, bosses_defeated, volume, player_stats, soul = load_game()
     pygame.mixer.music.set_volume(volume)
 
     # Charger la vidéo de fond et réduire sa taille
-    clip = VideoFileClip(video_path)
+    if 'Thanatos' in bosses_defeated :
+        clip = VideoFileClip(video_pathThanatDefeat)
+    else:
+        clip = VideoFileClip(video_path)
     clip = clip.resize((SCREEN_WIDTH, SCREEN_HEIGHT))
     video_frames = [pygame.image.frombuffer(frame.tobytes(), frame.shape[1::-1], "RGB") for frame in clip.iter_frames()]
 
@@ -138,6 +144,7 @@ def main():
         if choice == "play":
             boss_name = boss_selection_menu(screen, trophies, bosses_defeated, video_frames, font)
             if boss_name:
+                continueQ = False
                 if boss_name == "Hades":
                     Hades_intermediate_screen(screen, clock, font)
                 elif boss_name == "Prometheus":
@@ -263,8 +270,32 @@ def main():
                     clock.tick(FPS)
 
                     if player.health <= 0:
-                        game_active = False
-                        game_over_screen(screen, video_frames)
+                        if soul!=0 and "Thanatos" in bosses_defeated and continueQ == False:
+                            choice = continue_menu(soul, screen, video_frames)
+                            if choice == False:
+                                game_active = False
+                                game_over_screen(screen, video_frames)
+                                save_game(trophies, bosses_defeated, volume, player_stats, soul)
+                            if choice:
+                                soul-=1
+                                continueQ = True
+                                player.health = player.base_health + (player.stats['health'] * 20)
+                                save_game(trophies, bosses_defeated, volume, player_stats, soul)
+                        else : 
+                            game_active = False
+                            game_over_screen(screen, video_frames)
+                        save_game(trophies, bosses_defeated, volume, player_stats, soul)
+                        
+                    elif boss.health <= 0 and boss_name == "Thanatos":
+                        
+                        boss.start_dying()
+                        boss.update()
+                        boss.draw(screen)
+                        pygame.display.flip()
+                        pygame.time.wait(2000)
+                        Thanatos_intermediate_screen(screen, clock, font)
+                        boss = Prometheus(SCREEN_WIDTH // 2, 50)
+                        
                     elif boss.health <= 0:
                         boss.start_dying()
                         boss.update()
@@ -272,23 +303,26 @@ def main():
                         pygame.display.flip()
                         pygame.time.wait(2000)  # Attendre que l'animation de mort se termine
                         game_active = False
+                        soul +=1
                         if boss_name not in bosses_defeated:
                             trophies += 1
                             bosses_defeated.append(boss_name)
-                        save_game(trophies, bosses_defeated, volume, player_stats)
+                        save_game(trophies, bosses_defeated, volume, player_stats, soul)
                         victory_screen(screen, video_frames, boss_name == "Cerberus" and boss_name not in bosses_defeated, font)
 
         if choice == "settings":
             volume = settings_menu(screen, volume, video_frames)
             config['Music']['volume'] = str(volume)  # Mettre à jour le volume dans la config
-            save_config(config)
+            save_game(trophies, bosses_defeated, volume, player_stats, soul)
         elif choice == "quit":
+            save_game(trophies, bosses_defeated, volume, player_stats, soul)
             pygame.quit()
             sys.exit()
         elif choice == "credits":
             credits_menu(screen, video_frames)
+            save_game(trophies, bosses_defeated, volume, player_stats, soul)
         elif choice == "shop":
             trophies, player_stats = shop_menu(screen, trophies, player_stats, video_frames, font)
-
+            save_game(trophies, bosses_defeated, volume, player_stats, soul)
 
 main()
