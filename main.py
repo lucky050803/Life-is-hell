@@ -47,7 +47,9 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Life Is Hell")
 
 font = pygame.font.Font(font_path, 24)
+programIcon = pygame.image.load(config['Icone']['icone'])
 
+pygame.display.set_icon(programIcon)
 def draw_text(screen, text, font, color, x, y):
     text_surface = font.render(text, True, color)
     screen.blit(text_surface, (x, y))
