@@ -6,7 +6,7 @@ from moviepy.editor import VideoFileClip
 from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen, credits_menu, shop_menu
 from setting_menu import settings_menu
 from player import Player
-from boss import Hades, Cerberus, Prometheus, Charon, Thanatos
+from boss import Hades, Cerberus, Prometheus, Thanatos, TheSisters
 from item import HealthItem
 from config import load_config, save_config
 from bossscreen import *
@@ -136,9 +136,7 @@ def main():
         if choice == "play":
             boss_name = boss_selection_menu(screen, trophies, bosses_defeated, video_frames, font)
             if boss_name:
-                if boss_name == "Charon":
-                    Charon_intermediate_screen(screen, clock, font)
-                elif boss_name == "Hades":
+                if boss_name == "Hades":
                     Hades_intermediate_screen(screen, clock, font)
                 elif boss_name == "Prometheus":
                     Prom_intermediate_screen(screen, clock, font)
@@ -146,6 +144,9 @@ def main():
                     Cerb_intermediate_screen(screen, clock, font)
                 elif boss_name == "Thanatos":
                     Thanatos_intermediate_screen(screen, clock, font)  # Ajouter un écran intermédiaire pour Thanatos
+                elif boss_name == "The Sisters":
+                    TheS_intermediate_screen(screen, clock, font)
+                    TheS_intermediate_screen_B(screen, clock, font)
                     
                 show_loading_screen(screen, font)
                 pygame.time.wait(2000)  # Temps d'attente simulé pour le chargement
@@ -161,10 +162,10 @@ def main():
                     boss = Prometheus(SCREEN_WIDTH // 2, 50)
                 elif boss_name == "Hades":
                     boss = Hades(SCREEN_WIDTH // 2, 50)
-                elif boss_name == "Charon":
-                    boss = Charon(SCREEN_WIDTH // 2, 50)  # Add Charon initialization
                 elif boss_name == "Thanatos":
                     boss = Thanatos(SCREEN_WIDTH // 2, 50)  # Initialisation de Thanatos
+                elif boss_name == "The Sisters":
+                    boss = TheSisters(SCREEN_WIDTH // 2, 50)
 
 
 
@@ -195,7 +196,15 @@ def main():
                     # Mettre à jour les balles du joueur
                     for bullet in player_bullets[:]:
                         bullet.update()
-                        if bullet.rect.colliderect(boss.rect):
+                        if boss_name !="The Sisters" and bullet.rect.colliderect(boss.rect):
+                            boss.health -= player.damage
+                            player_bullets.remove(bullet)
+                        if boss_name =="The Sisters" and bullet.rect.colliderect(boss.sister1["rect"]) :
+                            boss.sister1["health"] -= player.damage
+                            boss.health -= player.damage
+                            player_bullets.remove(bullet)
+                        elif boss_name =="The Sisters" and bullet.rect.colliderect(boss.sister2["rect"]) :
+                            boss.sister2["health"] -= player.damage
                             boss.health -= player.damage
                             player_bullets.remove(bullet)
                         elif bullet.rect.left < 0 or bullet.rect.right > SCREEN_WIDTH or bullet.rect.top < 0 or bullet.rect.bottom > SCREEN_HEIGHT:
