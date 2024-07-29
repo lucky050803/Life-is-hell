@@ -2,7 +2,7 @@ import pygame
 import random
 import math
 from bullet import *
-from bullet import Bullet, ExplodingBullet, DamageLineBullet
+
 
 class Cerberus:
     def __init__(self, x, y):
