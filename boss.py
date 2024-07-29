@@ -434,7 +434,6 @@ class Thanatos:
         for bullet in self.bullet_ring:
             bullet.draw(screen)
 
-
 class TheSisters:
     def __init__(self, x, y):
         self.sister1 = {
