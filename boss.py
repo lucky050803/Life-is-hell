@@ -139,12 +139,12 @@ class Prometheus:
         if len(self.line_timers) < self.phase:
             if self.phase == 1 or (self.phase == 3 and random.choice([True, False])):
                 # Vertical line
-                start_x = random.randint(50, 550)
-                bullets = [DamageLineBullet((start_x, 0), (start_x, 600), 180)]
+                start_x = random.randint(1, 5)
+                bullets = [DamageLineBullet((start_x*100, 0), (start_x*100, 600), 180)]
             else:
                 # Horizontal line
-                start_y = random.randint(50, 550)
-                bullets = [DamageLineBullet((0, start_y), (600, start_y), 180)]
+                start_y = random.randint(1, 5)
+                bullets = [DamageLineBullet((0, start_y*100), (600, start_y*100), 180)]
             self.line_timers.append(180)
             return bullets
         return []
