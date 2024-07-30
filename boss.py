@@ -587,7 +587,6 @@ class TheSisters:
         if self.sister2['health'] > 0:
             pygame.draw.circle(screen, self.sister2['color'], self.sister2['rect'].center, 30)
 
-
 class Thanatos_B:
     def __init__(self, x, y):
         self.rect = pygame.Rect(x - 30, y - 30, 60, 60)

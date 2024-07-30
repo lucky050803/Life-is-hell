@@ -172,7 +172,7 @@ def credits_menu(screen, video_frames):
         pygame.display.flip()
 
 def victory_screen(screen, video_frames, font):
-    font = pygame.freetype.Font(font_path, 48)
+    
     clock = pygame.time.Clock()
     timer = 0
     duration = 300  # Afficher l'écran de victoire pendant 5 secondes
@@ -188,7 +188,7 @@ def victory_screen(screen, video_frames, font):
         screen.blit(frame, (0, 0))
 
         victory_text = "Victory!"
-        text_surface = font.render(victory_text, True, (0, 0, 255))
+        text_surface = font.render(victory_text, True, (255, 255, 255))
         text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
         text_surface.set_alpha(int(timer * alpha_step))
         screen.blit(text_surface, text_rect)
