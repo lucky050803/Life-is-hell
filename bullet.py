@@ -48,7 +48,7 @@ class ExplodingBullet(Bullet):
             super().update()
             if math.hypot(self.rect.centerx - self.target_pos[0], self.rect.centery - self.target_pos[1]) < 10:
                 self.exploded = True
-                return [Bullet(self.rect.center, self.target_pos, speed=5, color=(255, 255, 0)) for _ in range(8)]
+                return [Bullet(self.rect.center, self.target_pos, speed=8, color=(255, 255, 0)) for _ in range(12)]
         return []
 
 class DamageLineBullet(Bullet):
@@ -111,6 +111,24 @@ class TriangleBullet(Bullet):
                 self.rect.center = self.start_pos
                 self.velocity = (0, 0)
 
+class SelfExplodingBullet(Bullet):
+    def __init__(self, start_pos, target_pos):
+        super().__init__(start_pos, target_pos, color=(255, 0, 0))
+        self.exploded = False
+        self.timer = 180  # 3 seconds at 60 FPS
+
+    def update(self):
+        self.timer -= 1
+        if self.timer <= 0:
+            self.exploded = True
+
+        if self.exploded:
+            super().update()
+            if math.hypot(self.rect.centerx - self.target_pos[0], self.rect.centery - self.target_pos[1]) < 10:
+                self.exploded = True
+                return [Bullet(self.rect.center, self.target_pos, speed=5, color=(255, 255, 0)) for _ in range(8)]
+        return []
+    
 class PlayerBullet(pygame.sprite.Sprite):
     def __init__(self, start_pos, target_pos):
         super().__init__()

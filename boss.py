@@ -387,10 +387,10 @@ class Thanatos:
 
     def phase_four_attack(self):
         bullets = []
-        for angle in range(0, 360, 15):
+        for angle in range(0, 360, 45):
             target_x = self.rect.centerx + 250 * math.cos(math.radians(angle))
             target_y = self.rect.centery + 250 * math.sin(math.radians(angle))
-            bullets.append(DamageLineBullet(self.rect.center, (target_x, target_y), 180))
+            bullets.append(SelfExplodingBullet(self.rect.center, (target_x, target_y)))
         return bullets
 
     def start_dying(self):
@@ -577,3 +577,98 @@ class TheSisters:
             ])
         if self.sister2['health'] > 0:
             pygame.draw.circle(screen, self.sister2['color'], self.sister2['rect'].center, 30)
+
+
+class Thanatos_B:
+    def __init__(self, x, y):
+        self.rect = pygame.Rect(x - 30, y - 30, 60, 60)
+        self.health = 500
+        self.max_health = 500
+        self.move_timer = 0
+        self.move_interval = 50
+        self.target_pos = self.get_new_position()
+        self.attack_timer = 0
+        self.attack_interval = 70
+        self.phase = 1
+        self.phase_health_thresholds = [500, 300]
+        self.dying = False
+        self.fade_alpha = 255
+        self.color = (255, 0, 0)
+        self.line_timers = []
+        self.line_duration = 500
+        self.ring_size = 150  # Initial size of the bullet ring
+        self.bullet_ring = self.create_bullet_ring()
+        
+    def get_new_position(self):
+        return random.randint(50, 550), random.randint(50, 550)
+
+    def create_bullet_ring(self):
+        bullets = []
+        for angle in range(0, 360, 30):
+            rad = math.radians(angle)
+            x = self.rect.centerx + self.ring_size * math.cos(rad)
+            y = self.rect.centery + self.ring_size * math.sin(rad)
+            bullets.append(Bullet((x, y), (self.rect.centerx, self.rect.centery), speed=0))
+        return bullets
+    
+    def fire_exploding_bullets(self):
+        bullets = []
+        for angle in range(0, 360, 45):
+            target_x = self.rect.centerx + 250 * math.cos(math.radians(angle))
+            target_y = self.rect.centery + 250 * math.sin(math.radians(angle))
+            bullets.append(SelfExplodingBullet(self.rect.center, (target_x, target_y)))
+        return bullets
+    
+    def update_bullet_ring(self):
+        for i, bullet in enumerate(self.bullet_ring):
+            angle = (pygame.time.get_ticks() / 10 + i * 30) % 360
+            rad = math.radians(angle)
+            bullet.rect.centerx = self.rect.centerx + self.ring_size * math.cos(rad)
+            bullet.rect.centery = self.rect.centery + self.ring_size * math.sin(rad)
+
+    def start_dying(self):
+        self.dying = True
+        
+    def shoot_rebounding_bullets(self):
+        bullets = []
+        for _ in range(8):  # 8 balles qui rebondissent
+            target_pos = self.get_new_position()
+            bullets.append(ReboundingBullet(self.rect.center, target_pos, color=(0, 0, 255)))  # Les projectiles sont bleus
+        return bullets
+    
+    def update(self):
+        if self.dying:
+            self.fade_alpha -= 5
+            if self.fade_alpha < 0:
+                self.fade_alpha = 0
+            return []
+
+        self.move_timer += 1
+        self.attack_timer += 1
+        self.line_timers = [timer - 1 for timer in self.line_timers if timer > 0]
+
+        if self.move_timer >= self.move_interval:
+            self.move_timer = 0
+            self.target_pos = self.get_new_position()
+
+        if self.rect.center != self.target_pos:
+            self.rect = self.rect.move(
+                (self.target_pos[0] - self.rect.centerx) // self.move_interval,
+                (self.target_pos[1] - self.rect.centery) // self.move_interval
+            )
+
+        if self.attack_timer >= self.attack_interval:
+            self.attack_timer = 0
+            test=random.random()
+            if  test< 0.5:
+                return self.fire_exploding_bullets()
+            else:
+                return self.shoot_rebounding_bullets()
+            
+        self.update_bullet_ring()
+        return []
+
+    def draw(self, screen):
+        pygame.draw.circle(screen, self.color, self.rect.center, 30)
+        for bullet in self.bullet_ring:
+            bullet.draw(screen)

@@ -6,7 +6,7 @@ from moviepy.editor import VideoFileClip
 from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen, credits_menu, shop_menu,continue_menu
 from setting_menu import settings_menu
 from player import Player
-from boss import Hades, Cerberus, Prometheus, Thanatos, TheSisters
+from boss import Hades, Cerberus, Prometheus, Thanatos, TheSisters, Thanatos_B
 from item import HealthItem
 from config import load_config, save_config
 from bossscreen import *
@@ -293,8 +293,8 @@ def main():
                         boss.draw(screen)
                         pygame.display.flip()
                         pygame.time.wait(2000)
-                        Thanatos_intermediate_screen(screen, clock, font)
-                        boss = Prometheus(SCREEN_WIDTH // 2, 50)
+                        ThanatosB_intermediate_screen(screen, clock, font)
+                        boss = Thanatos_B(SCREEN_WIDTH // 2, 50)
                         
                     elif boss.health <= 0:
                         boss.start_dying()
