@@ -305,10 +305,12 @@ def main():
                         
                     elif boss.health <= 0:
                         boss.start_dying()
-                        boss.update()
-                        boss.draw(screen)
-                        pygame.display.flip()
-                        pygame.time.wait(2000)  # Attendre que l'animation de mort se termine
+                        while boss.fade_alpha > 0:
+                            boss.update()
+                            boss.draw(screen)
+                            clock.tick(60)
+                            pygame.display.flip()
+                        # Attendre que l'animation de mort se termine
                         game_active = False
                         soul +=1
                         if boss_name not in bosses_defeated:
