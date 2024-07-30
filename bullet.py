@@ -133,7 +133,7 @@ class PlayerBullet(pygame.sprite.Sprite):
     def __init__(self, start_pos, target_pos):
         super().__init__()
         self.image = pygame.Surface((10, 10))
-        self.image.fill((0, 0, 255))
+        self.image.fill((255, 255, 255))
         self.rect = self.image.get_rect(center=start_pos)
         self.speed = 10
         self.velocity = self.calculate_velocity(start_pos, target_pos)
@@ -145,6 +145,9 @@ class PlayerBullet(pygame.sprite.Sprite):
     def update(self):
         self.rect.x += self.velocity[0]
         self.rect.y += self.velocity[1]
+    
+    def draw(self, screen):
+        screen.blit(self.image, self.rect.topleft)
 
 class BossBullet(pygame.sprite.Sprite):
     def __init__(self, x, y):

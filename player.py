@@ -1,6 +1,6 @@
 import pygame
 import math
-from bullet import Bullet
+from bullet import PlayerBullet
 
 class Player:
     def __init__(self, x, y, stats):
@@ -40,5 +40,5 @@ class Player:
             dx = math.cos(angle)
             dy = math.sin(angle)
             new_target_pos = (target_pos[0] + dx * 100, target_pos[1] + dy * 100)  # Ajuster la position cible pour chaque projectile
-            bullets.append(Bullet(self.rect.center, new_target_pos, self.damage))
+            bullets.append(PlayerBullet(self.rect.center, new_target_pos))
         return bullets

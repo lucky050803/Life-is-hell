@@ -195,15 +195,15 @@ class Prometheus:
 class Hades:
     def __init__(self, x, y):
         self.rect = pygame.Rect(x - 30, y - 30, 60, 60)
-        self.health = 3000
-        self.max_health = 3000
+        self.health = 1500
+        self.max_health = 1500
         self.move_timer = 0
         self.move_interval = 60
         self.target_pos = self.get_new_position()
         self.attack_timer = 0
         self.attack_interval = 100
         self.phase = 1
-        self.phase_health_thresholds = [3000, 2000, 1000]
+        self.phase_health_thresholds = [1500, 1000, 500]
         self.dying = False
         self.fade_alpha = 255
         self.color = (255, 69, 0)  # Initial color: orange-red
@@ -233,18 +233,19 @@ class Hades:
             target_pos = self.get_new_position()
             bullets.append(ReboundingBullet(self.rect.center, target_pos, color=(255, 0, 0)))  # Les projectiles sont bleus
         return bullets
-    
-    def fire_spiral_projectiles(self):
-        bullets = []
-        for angle in range(0, 360, 15):
-            target_x = self.rect.centerx + 200 * math.cos(math.radians(angle))
-            target_y = self.rect.centery + 200 * math.sin(math.radians(angle))
-            bullets.append(Bullet(self.rect.center, (target_x, target_y), color=(255, 0, 0)))  # Red projectiles
-        return bullets
+
 
     def start_dying(self):
         self.dying = True
 
+    def phase_four_attack(self):
+        bullets = []
+        for angle in range(0, 360, 45):
+            target_x = self.rect.centerx + 250 * math.cos(math.radians(angle))
+            target_y = self.rect.centery + 250 * math.sin(math.radians(angle))
+            bullets.append(SelfExplodingBullet(self.rect.center, (target_x, target_y)))
+        return bullets
+    
     def update(self):
         if self.dying:
             self.fade_alpha -= 5
@@ -289,21 +290,22 @@ class Hades:
                     return self.shoot_rebounding_bullets()
                 else:
                     return self.fire_spiral_projectiles()
-            if self.phase == 2:
+            if self.phase == 3:
                 test=random.random()
                 if  test< 0.1:
                     return self.fire_exploding_bullets()
                 if test > 0.1 and test < 0.3:
                     return self.shoot_rebounding_bullets()
                 if test > 0.3 and test <0.65 :
-                    return self.fire_spiral_projectiles()
+                    return self.phase_four_attack()
                 else :
                     return self.summon_fire_circles()
+                
+        self.update_bullet_ring()
         return []
 
     def draw(self, screen):
         pygame.draw.circle(screen, self.color, self.rect.center, 30)
-
 class DamageCircle:
     def __init__(self, pos, radius, duration):
         self.rect = pygame.Rect(pos[0] - radius, pos[1] - radius, radius * 2, radius * 2)
@@ -323,15 +325,15 @@ class DamageCircle:
 class Thanatos:
     def __init__(self, x, y):
         self.rect = pygame.Rect(x - 30, y - 30, 60, 60)
-        self.health = 1
-        self.max_health = 1
+        self.health = 2000
+        self.max_health = 2000
         self.move_timer = 0
         self.move_interval = 35
         self.target_pos = self.get_new_position()
         self.attack_timer = 0
         self.attack_interval = 100
         self.phase = 1
-        self.phase_health_thresholds = [1000, 600, 300]
+        self.phase_health_thresholds = [1700, 1000, 500]
         self.dying = False
         self.fade_alpha = 255
         self.color = (255, 0, 0)  # Initial color: red
@@ -439,18 +441,18 @@ class TheSisters:
         self.sister1 = {
             'shape': 'triangle',
             'rect': pygame.Rect(x - 30, y - 30, 60, 60),
-            'health': 400,
-            'max_health': 400,
+            'health': 1000,
+            'max_health': 1000,
             'color': (255, 0, 0),
         }
         self.sister2 = {
             'shape': 'circle',
             'rect': pygame.Rect(x + 30, y - 30, 60, 60),
-            'health': 400,
-            'max_health': 400,
+            'health': 1000,
+            'max_health': 1000,
             'color': (0, 0, 255),
         }
-        self.health = 800  # Total health
+        self.health = 2000  # Total health
         self.phase = 1
         self.phase_health_thresholds = [200, 100]  # Health thresholds for phases
         self.attack_timer = 0
@@ -476,15 +478,18 @@ class TheSisters:
 
     def shoot_rebounding_bullets(self):
         bullets = []
-        for _ in range(8):
+        for _ in range(5):
             target_pos = self.get_new_position()
             bullets.append(ReboundingBullet(self.sister2['rect'].center, target_pos, color=(0, 0, 255)))
         return bullets
 
     def restrict_quadrant(self):
-        quadrant = random.choice([i for i, restricted in enumerate(self.quadrants_restricted) if not restricted])
-        self.quadrants_restricted[quadrant] = True
-        return quadrant
+        if False in self.quadrants_restricted :
+            quadrant = random.choice([i for i, restricted in enumerate(self.quadrants_restricted) if not restricted])
+            self.quadrants_restricted[quadrant] = True
+            return quadrant
+        else:
+            return -1
 
     def shoot_triangle_bullets(self):
         bullets = []
@@ -558,10 +563,14 @@ class TheSisters:
             if self.sister1['health'] > 0 and self.sister2['health'] > 0:
                 bullets += self.shoot_triangle_bullets() if random.random() < 0.5 else self.shoot_rebounding_bullets()
             elif self.sister1['health'] <= 0:
+                self.sister2['health'] = 600
+                self.health = 600
                 bullets += self.shoot_rebounding_bullets() + self.transfer_signature_attack()
                 quadrant = self.restrict_quadrant()
                 bullets += self.create_restriction_lines(quadrant)
             elif self.sister2['health'] <= 0:
+                self.sister1['health'] = 600
+                self.health = 600
                 bullets += self.fire_exploding_bullets() + self.transfer_signature_attack()
                 quadrant = self.restrict_quadrant()
                 bullets += self.create_restriction_lines(quadrant)
@@ -582,8 +591,8 @@ class TheSisters:
 class Thanatos_B:
     def __init__(self, x, y):
         self.rect = pygame.Rect(x - 30, y - 30, 60, 60)
-        self.health = 500
-        self.max_health = 500
+        self.health = 1000
+        self.max_health = 1000
         self.move_timer = 0
         self.move_interval = 50
         self.target_pos = self.get_new_position()

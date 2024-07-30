@@ -234,6 +234,13 @@ def main():
                             boss_bullets.remove(bullet)
                         if bullet.update()==False:
                             boss_bullets.remove(bullet)
+                            
+                    if boss_name == "Thanatos":
+                        for bullet in boss.bullet_ring:
+                            bullet.update()
+                            if bullet.rect.colliderect(player.rect):
+                                player.health -= 10
+                                boss.bullet_ring.remove(bullet)
 
                     # Mettre à jour les objets de soin
                     for item in health_items[:]:
@@ -308,7 +315,7 @@ def main():
                             trophies += 1
                             bosses_defeated.append(boss_name)
                         save_game(trophies, bosses_defeated, volume, player_stats, soul)
-                        victory_screen(screen, video_frames, boss_name == "Cerberus" and boss_name not in bosses_defeated, font)
+                        victory_screen(screen, video_frames, font)
 
         if choice == "settings":
             volume = settings_menu(screen, volume, video_frames)

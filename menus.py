@@ -171,11 +171,9 @@ def credits_menu(screen, video_frames):
         
         pygame.display.flip()
 
-def victory_screen(screen, video_frames, cerberus_first_defeat=False, prometheus_first_defeat=False,hades_first_defeat=False,Thanatos_first_defeat=False ,font=None):
+def victory_screen(screen, video_frames, font):
+    font = pygame.freetype.Font(font_path, 48)
     clock = pygame.time.Clock()
-    if not font:
-        font = pygame.font.Font(None, 48)
-
     timer = 0
     duration = 300  # Afficher l'écran de victoire pendant 5 secondes
     alpha_step = 255 / duration
@@ -190,38 +188,10 @@ def victory_screen(screen, video_frames, cerberus_first_defeat=False, prometheus
         screen.blit(frame, (0, 0))
 
         victory_text = "Victory!"
-        text_surface = font.render(victory_text, True, (255, 255, 255))
+        text_surface = font.render(victory_text, True, (0, 0, 255))
         text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
         text_surface.set_alpha(int(timer * alpha_step))
         screen.blit(text_surface, text_rect)
-
-        if cerberus_first_defeat:
-            unlock_text = "Prometheus Unlocked!"
-            unlock_surface = font.render(unlock_text, True, (255, 255, 0))
-            unlock_rect = unlock_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
-            unlock_surface.set_alpha(int(timer * alpha_step))
-            screen.blit(unlock_surface, unlock_rect)
-        
-        if prometheus_first_defeat:
-            unlock_text = "Hades Unlocked!"
-            unlock_surface = font.render(unlock_text, True, (255, 255, 0))
-            unlock_rect = unlock_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100))
-            unlock_surface.set_alpha(int(timer * alpha_step))
-            screen.blit(unlock_surface, unlock_rect)
-
-        if hades_first_defeat:
-            unlock_text = "Thanatos Unlocked!"
-            unlock_surface = font.render(unlock_text, True, (255, 255, 0))
-            unlock_rect = unlock_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100))
-            unlock_surface.set_alpha(int(timer * alpha_step))
-            screen.blit(unlock_surface, unlock_rect)
-            
-        if Thanatos_first_defeat:
-            unlock_text = "The Sisters Unlocked!"
-            unlock_surface = font.render(unlock_text, True, (255, 255, 0))
-            unlock_rect = unlock_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100))
-            unlock_surface.set_alpha(int(timer * alpha_step))
-            screen.blit(unlock_surface, unlock_rect)
             
         pygame.display.flip()
         clock.tick(60)
