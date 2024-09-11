@@ -167,3 +167,41 @@ class BossBullet(pygame.sprite.Sprite):
             screen.blit(self.image, self.rect)
         else:
             pygame.draw.rect(screen, self.color, self.rect)
+            
+            
+            
+class SquareBullet(Bullet):
+    def __init__(self, start_pos, target_pos, color=(0, 0, 255)):
+        self.size = 4  # Taille initiale du carré
+        self.image = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
+        pygame.draw.rect(self.image, color, self.image.get_rect())  # Dessiner un carré
+        self.rect = self.image.get_rect(center=start_pos)
+        self.speed = 1  # Vitesse du projectile
+        self.velocity = self.calculate_velocity(start_pos, target_pos)
+        self.start_pos = start_pos
+        self.distance_traveled = 0  # Distance parcourue
+
+    def update(self):
+        # Mise à jour de la position du bullet
+        self.rect.x += self.velocity[0]
+        self.rect.y += self.velocity[1]
+
+        # Calculer la distance parcourue
+        self.distance_traveled = math.hypot(self.rect.centerx - self.start_pos[0], self.rect.centery - self.start_pos[1])
+
+        # Augmenter la taille du carré au fur et à mesure qu'il parcourt une plus grande distance
+        if self.distance_traveled > 50 and self.size < 60:  # Limite la taille maximale
+            self.size += 1
+            self.image = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
+            pygame.draw.rect(self.image, (0, 0, 255), self.image.get_rect())  # Mettre à jour la taille du carré
+            self.rect = self.image.get_rect(center=self.rect.center)
+
+        # Si le carré a parcouru une certaine distance, il disparaît ou retourne à son point de départ (si besoin)
+        
+
+    def calculate_velocity(self, start_pos, target_pos):
+        """Calculer la vitesse du projectile vers la cible."""
+        distance_x = target_pos[0] - start_pos[0]
+        distance_y = target_pos[1] - start_pos[1]
+        distance = math.hypot(distance_x, distance_y)
+        return (self.speed * distance_x / distance, self.speed * distance_y / distance)

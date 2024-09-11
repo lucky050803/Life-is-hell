@@ -680,3 +680,171 @@ class Thanatos_B:
         pygame.draw.circle(screen, self.color, self.rect.center, 30)
         for bullet in self.bullet_ring:
             bullet.draw(screen)
+            
+            
+class TheTrinity:
+    def __init__(self, x, y):
+        self.sister1 = {
+            'shape': 'triangle',
+            'rect': pygame.Rect(x - 60, y - 60, 60, 60),
+            'health': 1000,
+            'max_health': 1000,
+            'color': (255, 0, 0),
+        }
+        self.sister2 = {
+            'shape': 'circle',
+            'rect': pygame.Rect(x, y - 60, 60, 60),
+            'health': 1000,
+            'max_health': 1000,
+            'color': (0, 255, 0),
+        }
+        self.sister3 = {
+            'shape': 'square',
+            'rect': pygame.Rect(x + 60, y - 60, 60, 60),
+            'health': 1000,
+            'max_health': 1000,
+            'color': (0, 0, 255),
+        }
+        self.health = 3000  # Total health for the boss
+        self.phase = 1
+        self.phase_health_thresholds = [2000, 1000, 500]  # Health thresholds for phases
+        self.attack_timer = 0
+        self.attack_interval = 70
+        self.move_timer = 0
+        self.move_interval = 50
+        self.target_pos1 = self.get_new_position()
+        self.target_pos2 = self.get_new_position()
+        self.target_pos3 = self.get_new_position()
+        self.dying = False
+        self.fade_alpha = 255
+        self.quadrants_restricted = [False, False, False, False]  # Restrict quadrants
+
+    def get_new_position(self):
+        return random.randint(50, 550), random.randint(50, 550)
+
+    def fire_exploding_bullets(self):
+        bullets = []
+        for angle in range(0, 360, 45):
+            target_x = self.sister1['rect'].centerx + 150 * math.cos(math.radians(angle))
+            target_y = self.sister1['rect'].centery + 150 * math.sin(math.radians(angle))
+            bullets.append(ExplodingBullet(self.sister1['rect'].center, (target_x, target_y)))
+        return bullets
+
+    def shoot_rebounding_bullets(self):
+        bullets = []
+        for _ in range(5):
+            target_pos = self.get_new_position()
+            bullets.append(ReboundingBullet(self.sister2['rect'].center, target_pos, color=(0, 255, 0)))
+        return bullets
+
+    def fire_square_bullets(self):
+        bullets = []
+        for angle in range(0, 360, 90):  # Square-shaped attack in 4 directions
+            target_x = self.sister3['rect'].centerx + 150 * math.cos(math.radians(angle))
+            target_y = self.sister3['rect'].centery + 150 * math.sin(math.radians(angle))
+            bullets.append(SquareBullet(self.sister3['rect'].center, (target_x, target_y), color=(0, 0, 255)))
+        return bullets
+
+    def restrict_quadrant(self):
+        if False in self.quadrants_restricted:
+            quadrant = random.choice([i for i, restricted in enumerate(self.quadrants_restricted) if not restricted])
+            self.quadrants_restricted[quadrant] = True
+            return quadrant
+        else:
+            return -1
+
+    def create_restriction_lines(self, quadrant):
+        lines = []
+        if quadrant == 0:  # Top-left
+            lines.append(DamageLineBullet((0, SCREEN_HEIGHT // 2), (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), duration=500))
+            lines.append(DamageLineBullet((SCREEN_WIDTH // 2, 0), (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), duration=500))
+        elif quadrant == 1:  # Top-right
+            lines.append(DamageLineBullet((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), (SCREEN_WIDTH, SCREEN_HEIGHT // 2), duration=500))
+            lines.append(DamageLineBullet((SCREEN_WIDTH // 2, 0), (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), duration=500))
+        elif quadrant == 2:  # Bottom-left
+            lines.append(DamageLineBullet((0, SCREEN_HEIGHT // 2), (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), duration=500))
+            lines.append(DamageLineBullet((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), (SCREEN_WIDTH // 2, SCREEN_HEIGHT), duration=500))
+        elif quadrant == 3:  # Bottom-right
+            lines.append(DamageLineBullet((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), (SCREEN_WIDTH, SCREEN_HEIGHT // 2), duration=500))
+            lines.append(DamageLineBullet((SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2), (SCREEN_WIDTH // 2, SCREEN_HEIGHT), duration=500))
+        return lines
+
+    def transfer_signature_attack(self):
+        if self.sister1['health'] <= 0:
+            return self.shoot_rebounding_bullets()
+        elif self.sister2['health'] <= 0:
+            return self.fire_exploding_bullets()
+        elif self.sister3['health'] <= 0:
+            return self.fire_square_bullets()
+        return []
+
+    def start_dying(self):
+        self.dying = True
+
+    def update(self):
+        if self.dying:
+            self.fade_alpha -= 5
+            if self.fade_alpha < 0:
+                self.fade_alpha = 0
+            return []
+
+        self.move_timer += 1
+        self.attack_timer += 1
+
+        if self.health <= self.phase_health_thresholds[3 - self.phase] and self.phase < 4:
+            self.phase += 1
+            self.attack_interval -= 20
+
+        if self.move_timer >= self.move_interval:
+            self.move_timer = 0
+            self.target_pos1 = self.get_new_position()
+            self.target_pos2 = self.get_new_position()
+            self.target_pos3 = self.get_new_position()
+
+        # Move each sister
+        if self.sister1['rect'].center != self.target_pos1:
+            self.sister1['rect'] = self.sister1['rect'].move(
+                (self.target_pos1[0] - self.sister1['rect'].centerx) // self.move_interval,
+                (self.target_pos1[1] - self.sister1['rect'].centery) // self.move_interval
+            )
+
+        if self.sister2['rect'].center != self.target_pos2:
+            self.sister2['rect'] = self.sister2['rect'].move(
+                (self.target_pos2[0] - self.sister2['rect'].centerx) // self.move_interval,
+                (self.target_pos2[1] - self.sister2['rect'].centery) // self.move_interval
+            )
+
+        if self.sister3['rect'].center != self.target_pos3:
+            self.sister3['rect'] = self.sister3['rect'].move(
+                (self.target_pos3[0] - self.sister3['rect'].centerx) // self.move_interval,
+                (self.target_pos3[1] - self.sister3['rect'].centery) // self.move_interval
+            )
+
+        bullets = []
+        if self.attack_timer >= self.attack_interval:
+            self.attack_timer = 0
+            if self.sister1['health'] > 0 and self.sister2['health'] > 0 and self.sister3['health'] > 0:
+                # Random attack from one of the sisters
+                bullets += random.choice([self.fire_exploding_bullets(), self.shoot_rebounding_bullets(), self.fire_square_bullets()])
+            else:
+                # When one or more sisters are dead, transfer attacks and restrict quadrants
+                bullets += self.transfer_signature_attack()
+                quadrant = self.restrict_quadrant()
+                bullets += self.create_restriction_lines(quadrant)
+
+        return bullets
+
+    def draw(self, screen):
+        # Draw sister 1 (triangle)
+        if self.sister1['health'] > 0:
+            pygame.draw.polygon(screen, self.sister1['color'], [
+                (self.sister1['rect'].centerx, self.sister1['rect'].centery - 30),
+                (self.sister1['rect'].centerx - 30, self.sister1['rect'].centery + 30),
+                (self.sister1['rect'].centerx + 30, self.sister1['rect'].centery + 30)
+            ])
+        # Draw sister 2 (circle)
+        if self.sister2['health'] > 0:
+            pygame.draw.circle(screen, self.sister2['color'], self.sister2['rect'].center, 30)
+        # Draw sister 3 (square)
+        if self.sister3['health'] > 0:
+            pygame.draw.rect(screen, self.sister3['color'], self.sister3['rect'])

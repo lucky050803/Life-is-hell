@@ -6,7 +6,7 @@ from moviepy.editor import VideoFileClip
 from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen, credits_menu, shop_menu,continue_menu
 from setting_menu import settings_menu
 from player import Player
-from boss import Hades, Cerberus, Prometheus, Thanatos, TheSisters, Thanatos_B
+from boss import Hades, Cerberus, Prometheus, Thanatos, TheSisters, Thanatos_B, TheTrinity
 from item import HealthItem
 from config import load_config, save_config
 from bossscreen import *
@@ -14,9 +14,6 @@ from bossscreen import *
 
 # Initialisation de Pygame
 pygame.init()
-
-
-
 
 # Charger la configuration
 config = load_config()
@@ -156,6 +153,8 @@ def main():
                 elif boss_name == "The Sisters":
                     TheS_intermediate_screen(screen, clock, font)
                     TheS_intermediate_screen_B(screen, clock, font)
+                elif boss_name == "The Trinity":
+                    TheT_intermediate_screen(screen, clock, font)
                     
                 show_loading_screen(screen, font)
                 pygame.time.wait(2000)  # Temps d'attente simulé pour le chargement
@@ -175,7 +174,8 @@ def main():
                     boss = Thanatos(SCREEN_WIDTH // 2, 50)  # Initialisation de Thanatos
                 elif boss_name == "The Sisters":
                     boss = TheSisters(SCREEN_WIDTH // 2, 50)
-
+                elif boss_name == "The Trinity":
+                    boss = TheTrinity(SCREEN_WIDTH // 2, 50)
 
 
                 player_bullets = []
@@ -214,6 +214,18 @@ def main():
                             player_bullets.remove(bullet)
                         elif boss_name =="The Sisters" and bullet.rect.colliderect(boss.sister2["rect"]) :
                             boss.sister2["health"] -= player.damage
+                            boss.health -= player.damage
+                            player_bullets.remove(bullet)
+                        elif boss_name =="The Trinity" and bullet.rect.colliderect(boss.sister1["rect"]) :
+                            boss.sister1["health"] -= player.damage
+                            boss.health -= player.damage
+                            player_bullets.remove(bullet)
+                        elif boss_name =="The Trinity" and bullet.rect.colliderect(boss.sister1["rect"]) :
+                            boss.sister2["health"] -= player.damage
+                            boss.health -= player.damage
+                            player_bullets.remove(bullet)
+                        elif boss_name =="The Trinity" and bullet.rect.colliderect(boss.sister3["rect"]) :
+                            boss.sister3["health"] -= player.damage
                             boss.health -= player.damage
                             player_bullets.remove(bullet)
                         elif bullet.rect.left < 0 or bullet.rect.right > SCREEN_WIDTH or bullet.rect.top < 0 or bullet.rect.bottom > SCREEN_HEIGHT:
