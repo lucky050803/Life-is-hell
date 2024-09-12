@@ -205,7 +205,7 @@ def main():
                     # Mettre à jour les balles du joueur
                     for bullet in player_bullets[:]:
                         bullet.update()
-                        if boss_name !="The Sisters" and bullet.rect.colliderect(boss.rect):
+                        if boss_name !="The Sisters" and boss_name!="The Trinity" and bullet.rect.colliderect(boss.rect):
                             boss.health -= player.damage
                             player_bullets.remove(bullet)
                         if boss_name =="The Sisters" and bullet.rect.colliderect(boss.sister1["rect"]) :
@@ -220,7 +220,7 @@ def main():
                             boss.sister1["health"] -= player.damage
                             boss.health -= player.damage
                             player_bullets.remove(bullet)
-                        elif boss_name =="The Trinity" and bullet.rect.colliderect(boss.sister1["rect"]) :
+                        elif boss_name =="The Trinity" and bullet.rect.colliderect(boss.sister2["rect"]) :
                             boss.sister2["health"] -= player.damage
                             boss.health -= player.damage
                             player_bullets.remove(bullet)
@@ -230,7 +230,8 @@ def main():
                             player_bullets.remove(bullet)
                         elif bullet.rect.left < 0 or bullet.rect.right > SCREEN_WIDTH or bullet.rect.top < 0 or bullet.rect.bottom > SCREEN_HEIGHT:
                             player_bullets.remove(bullet)
-
+                        
+                            
                     # Mettre à jour le boss et obtenir les projectiles créés
                     boss_projectiles = boss.update()
                     if boss_projectiles:
