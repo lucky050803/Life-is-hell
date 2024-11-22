@@ -6,7 +6,7 @@ from moviepy.editor import VideoFileClip
 from menus import main_menu, boss_selection_menu, game_over_screen, victory_screen, credits_menu, shop_menu,continue_menu
 from setting_menu import settings_menu
 from player import Player
-from boss import Hades, Cerberus, Prometheus, Thanatos, TheSisters, Thanatos_B, TheTrinity
+from boss import Hades, Cerberus, Prometheus, Thanatos, TheSisters, Thanatos_B, TheTrinity, Aetherion
 from item import HealthItem
 from config import load_config, save_config
 from bossscreen import *
@@ -155,6 +155,9 @@ def main():
                     TheS_intermediate_screen_B(screen, clock, font)
                 elif boss_name == "The Trinity":
                     TheT_intermediate_screen(screen, clock, font)
+                elif boss_name == "Aetherion":
+                    Aet_screen(screen, clock, font)
+                    Aet_screen_B(screen, clock, font)
                     
                 show_loading_screen(screen, font)
                 pygame.time.wait(2000)  # Temps d'attente simulé pour le chargement
@@ -176,6 +179,8 @@ def main():
                     boss = TheSisters(SCREEN_WIDTH // 2, 50)
                 elif boss_name == "The Trinity":
                     boss = TheTrinity(SCREEN_WIDTH // 2, 50)
+                elif boss_name == "Aetherion":
+                    boss = Aetherion(SCREEN_WIDTH // 2, 50)
 
 
                 player_bullets = []
@@ -228,7 +233,7 @@ def main():
                             boss.sister3["health"] -= player.damage
                             boss.health -= player.damage
                             player_bullets.remove(bullet)
-                        elif bullet.rect.left < 0 or bullet.rect.right > SCREEN_WIDTH or bullet.rect.top < 0 or bullet.rect.bottom > SCREEN_HEIGHT:
+                        elif bullet.rect.left < 0 or bullet.rect.right > SCREEN_WIDTH or bullet.rect.top < 0 or bullet.rect.bottom > SCREEN_HEIGHT and bullet in player_bullets:
                             player_bullets.remove(bullet)
                         
                             

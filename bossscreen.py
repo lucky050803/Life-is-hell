@@ -296,3 +296,73 @@ def TheT_intermediate_screen(screen, clock, font) :
             running = False
 
     pygame.mixer.music.stop()
+    
+    
+    
+
+def Aet_screen(screen, clock, font) :
+     # Charger la vidéo de fond de Charon
+    clip = VideoFileClip(BaseScreen)
+    clip = clip.resize((screen.get_width(), screen.get_height()))  # Redimensionner la vidéo à la taille de l'écran
+
+    # Charger et jouer la musique de Charon
+    pygame.mixer.music.load(BaseMusicP)
+    pygame.mixer.music.play(-1)  # -1 pour jouer en boucle
+
+    # Définir le texte
+    text = "MY child... You killed them all..." 
+    text_surface = font.render(text, True, (0, 255, 255))  # Blanc
+    text_rect = text_surface.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
+    # Afficher l'écran intermédiaire pendant la durée de la vidéo
+    running = True
+    for frame in clip.iter_frames(fps=30, dtype='uint8'):
+        # Convertir l'image de la vidéo en surface Pygame
+        frame_surface = pygame.surfarray.make_surface(np.transpose(frame, (1, 0, 2)))
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
+
+        # Dessiner la surface de la vidéo et le texte
+        screen.blit(frame_surface, (0, 0))
+        screen.blit(text_surface, text_rect)
+        pygame.display.flip()
+        clock.tick(30)  # Contrôler le taux de rafraîchissement pour correspondre à la vidéo
+
+        # Quitter la boucle après que la vidéo ait terminé
+        if not clip.is_playing:
+            running = False
+
+
+def Aet_screen_B(screen, clock, font) :
+     # Charger la vidéo de fond de Charon
+    clip = VideoFileClip(BaseScreen)
+    clip = clip.resize((screen.get_width(), screen.get_height()))  # Redimensionner la vidéo à la taille de l'écran
+
+    # Définir le texte
+    text = "My anger shall be thrusted upon thy !"
+    text_surface = font.render(text, True, (0, 255, 255))  # Blanc
+    text_rect = text_surface.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
+    # Afficher l'écran intermédiaire pendant la durée de la vidéo
+    running = True
+    for frame in clip.iter_frames(fps=30, dtype='uint8'):
+        # Convertir l'image de la vidéo en surface Pygame
+        frame_surface = pygame.surfarray.make_surface(np.transpose(frame, (1, 0, 2)))
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
+
+        # Dessiner la surface de la vidéo et le texte
+        screen.blit(frame_surface, (0, 0))
+        screen.blit(text_surface, text_rect)
+        pygame.display.flip()
+        clock.tick(30)  # Contrôler le taux de rafraîchissement pour correspondre à la vidéo
+
+        # Quitter la boucle après que la vidéo ait terminé
+        if not clip.is_playing:
+            running = False
+
+    pygame.mixer.music.stop()
