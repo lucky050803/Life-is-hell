@@ -67,6 +67,8 @@ def boss_selection_menu(screen, trophies, bosses_defeated, video_frames, font):
         boss_options.append("The Sisters")
     if "The Sisters" in bosses_defeated:
         boss_options.append("The Trinity")
+    if "The Trinity" in bosses_defeated:
+        boss_options.append("Aetherion")
     
     dropdown_active = False
     dropdown_rect = pygame.Rect(200, 150, 200, 50)

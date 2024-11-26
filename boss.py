@@ -848,3 +848,101 @@ class TheTrinity:
         # Draw sister 3 (square)
         if self.sister3['health'] > 0:
             pygame.draw.rect(screen, self.sister3['color'], self.sister3['rect'])
+
+
+import pygame
+import random
+import math
+
+class Aetherion:
+    def __init__(self, x, y):
+        self.rect = pygame.Rect(x - 50, y - 50, 100, 100)
+        self.health = 3000
+        self.max_health = 3000
+        self.phase = 1
+        self.phase_health_thresholds = [2000, 1000]
+        self.move_timer = 0
+        self.move_interval = 50
+        self.attack_timer = 0
+        self.attack_interval = 100
+        self.dying = False
+        self.fade_alpha = 255
+        self.color = (100, 100, 255)
+        self.target_pos = self.get_new_position()
+
+    def get_new_position(self):
+        return random.randint(50, 750), random.randint(50, 550)
+
+    def phase_one_attack(self):
+        """Phase 1: Solide - Attaques lourdes"""
+        bullets = []
+        # Chute des fragments
+        for _ in range(10):
+            x = random.randint(50, 750)
+            bullets.append(Bullet((x, 0), (x, 600), speed=5, color=(255, 100, 100)))
+        return bullets
+
+    def phase_two_attack(self):
+        """Phase 2: Énergétique - Attaques rapides"""
+        bullets = []
+        # Spirale de projectiles
+        for angle in range(0, 360, 30):
+            target_x = self.rect.centerx + 150 * math.cos(math.radians(angle))
+            target_y = self.rect.centery + 150 * math.sin(math.radians(angle))
+            bullets.append(Bullet(self.rect.center, (target_x, target_y), speed=7, color=(255, 255, 100)))
+        return bullets
+
+    def phase_three_attack(self):
+        """Phase 3: Astrale - Invocation et projectiles massifs"""
+        bullets = []
+        # Invocation d'orbes flottants
+        for _ in range(2):
+            x, y = self.get_new_position()
+            bullets.append(DamageCircle((x, y), 50, duration=180))
+        # Tempête cosmique
+        for _ in range(3):
+            x, y = random.randint(50, 750), random.randint(50, 550)
+            bullets.append(Bullet((x, 0), (x, 600), speed=3, color=(100, 100, 255)))
+        return bullets
+
+    def start_dying(self):
+        self.dying = True
+
+    def update(self):
+        if self.dying:
+            self.fade_alpha -= 5
+            if self.fade_alpha < 0:
+                self.fade_alpha = 0
+            return []
+
+        self.move_timer += 1
+        self.attack_timer += 1
+
+        if self.health <= self.phase_health_thresholds[2 - self.phase] and self.phase < 3:
+            self.phase += 1
+            self.attack_interval -= 20
+            self.color = (self.color[0] + 50, self.color[1], self.color[2] + 50)
+
+        if self.move_timer >= self.move_interval:
+            self.move_timer = 0
+            self.target_pos = self.get_new_position()
+
+        if self.rect.center != self.target_pos:
+            self.rect = self.rect.move(
+                (self.target_pos[0] - self.rect.centerx) // self.move_interval,
+                (self.target_pos[1] - self.rect.centery) // self.move_interval
+            )
+
+        if self.attack_timer >= self.attack_interval:
+            self.attack_timer = 0
+            if self.phase == 1:
+                return self.phase_one_attack()
+            elif self.phase == 2:
+                return self.phase_two_attack()
+            else:
+                return self.phase_three_attack()
+
+        return []
+
+    def draw(self, screen):
+        pygame.draw.circle(screen, self.color, self.rect.center, 50)
